@@ -8,6 +8,7 @@ interface Appointment {
   service: string;
   date: string;
   start_time: string;
+  end_time: string;
   staff: string;
 }
 
@@ -18,7 +19,6 @@ interface StaffCalendarProps {
 const localizer = dayjsLocalizer(dayjs);
 
 export function StaffCalendar({ appointments }: StaffCalendarProps) {
-  // Fecha de hoy para generar eventos dentro del mes actual
   const today = dayjs();
 
   const events = appointments
@@ -26,7 +26,7 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
       if (!appt.date || !appt.start_time) return null;
       const start = dayjs(`${appt.date}T${appt.start_time}`);
       if (!start.isValid()) return null;
-      const end = start.add(1, "hour");
+      const end = dayjs(`${appt.date}T${appt.end_time}`);
       return {
         id: appt.id,
         title: `${appt.client} - ${appt.service}`,
@@ -36,31 +36,6 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
       };
     })
     .filter(Boolean);
-
-  // Mock events dentro del mes actual
-  const mockEvents = [
-    {
-      id: 1,
-      title: "Client A - Tobillo",
-      start: today.hour(10).minute(0).toDate(),
-      end: today.hour(11).minute(0).toDate(),
-      staff: "Aleix Rebollo",
-    },
-    {
-      id: 2,
-      title: "Client B - Rodilla",
-      start: today.add(1, "day").hour(14).minute(0).toDate(),
-      end: today.add(1, "day").hour(15).minute(0).toDate(),
-      staff: "Raquel Admin",
-    },
-    {
-      id: 3,
-      title: "Client C - Hombro",
-      start: today.add(2, "day").hour(9).minute(30).toDate(),
-      end: today.add(2, "day").hour(10).minute(30).toDate(),
-      staff: "Aleix Rebollo",
-    },
-  ];
 
   const staffColors: Record<string, string> = {
     "Aleix Rebollo": "#3182ce",
@@ -90,7 +65,7 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
     <div className="p-4 bg-white rounded-lg shadow-md h-[700px]">
   <Calendar
     localizer={localizer}
-    events={mockEvents} // cambia a `events` cuando tengas citas reales
+    events={events} // cambia a `events` cuando tengas citas reales
     startAccessor="start"
     endAccessor="end"
     titleAccessor="title"
