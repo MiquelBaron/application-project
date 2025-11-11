@@ -26,10 +26,14 @@ def list_appointments(request):
     """
     user = request.user
     if request.method == 'GET':
-        if user.is_superuser or user.groups.filter(name="Admin").exists():
+        if user.is_superuser or user.groups.filter(name="Admins").exists():
             appointments = Appointment.objects.all()
+            print("Admin appointments")
         else:
             appointments = Appointment.objects.filter(staff_member__user=request.user)
+            print("Staff appointments")
+            print(request.user)
+        print(appointments)
 
         data = [
             {
@@ -38,6 +42,7 @@ def list_appointments(request):
                 "service": a.service.name,
                 "date": str(a.date),
                 "start_time": str(a.start_time),
+                "end_time": str(a.end_time),
                 "staff": a.staff_member.user.get_full_name(),
             }
             for a in appointments

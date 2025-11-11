@@ -14,7 +14,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Staffs from "./pages/Staffs"
-
+import CalendarPage from "./pages/Calendar";
 import  ProtectedRoute  from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -36,6 +36,16 @@ const App = () => (
               <ProtectedRoute>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <CalendarPage />
                 </MainLayout>
               </ProtectedRoute>
             }

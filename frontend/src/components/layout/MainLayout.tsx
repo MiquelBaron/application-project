@@ -19,7 +19,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
-  const { logout, user } = useAuth(); // <- usamos logout
+  const { logout, user } = useAuth(); 
 
   return (
     <SidebarProvider>

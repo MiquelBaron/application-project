@@ -16,7 +16,6 @@ export function useStaffs(csrfToken?: string) {
           credentials: "include", 
           headers: {
             "Content-Type": "application/json",
-            ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
           },
         });
 
