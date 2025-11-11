@@ -1,12 +1,8 @@
-"""
-Author: Miquel Barón
-Since: 1.0.0
-"""
 
 from guardian.shortcuts import assign_perm
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django_q.tasks import async_task
+from  django_q.tasks import async_task
 from appointment.models import Appointment
 from appointment.logger_config import get_logger
 _logger = get_logger(__name__)

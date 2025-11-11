@@ -1,10 +1,6 @@
 # models.py
 # Path: appointment/models.py
 
-"""
-Author: Miquel Barón
-Since: 1.0.0
-"""
 
 import datetime
 from django.utils.text import slugify
@@ -262,9 +258,6 @@ class Appointment(models.Model):
     """
     Represents an appointment made by a client. It is created when the client confirms the appointment request.
 
-    Author: Miquel Barón
-    Version: 1.1.1
-    Since: 1.0.0
     """
     client = models.ForeignKey(
         'Client',
@@ -425,9 +418,6 @@ class Config(models.Model):
     Represents configuration settings for the appointment system. There can only be one Config object in the database.
     If you want to change the settings, you must edit the existing Config object.
 
-    Author: Adams Pierre David
-    Version: 1.1.0
-    Since: 1.1.0
     """
     slot_duration = models.PositiveIntegerField(
         null=True,

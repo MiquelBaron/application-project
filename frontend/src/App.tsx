@@ -13,6 +13,7 @@ import Clients from "./pages/Customers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Staffs from "./pages/Staffs"
 
 import  ProtectedRoute  from "./components/ProtectedRoute";
 
@@ -42,11 +43,10 @@ const App = () => (
           <Route
             path="/appointments"
             element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Appointments />
-                </MainLayout>
-              </ProtectedRoute>
+                            <MainLayout>
+
+              <div className="p-6 text-center">Appointments view coming soon!</div>
+              </MainLayout>
             }
           />
           <Route
@@ -60,13 +60,20 @@ const App = () => (
             }
           />
           <Route
+            path="/staff"
+            element={
+              <MainLayout>
+              <div className="p-6 text-center"><Staffs></Staffs></div>
+              </MainLayout>
+
+            }
+          />
+          <Route
             path="/settings"
             element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Settings />
-                </MainLayout>
-              </ProtectedRoute>
+              <MainLayout>
+              <div className="p-6 text-center">Settings view coming soon!</div>
+              </MainLayout>
             }
           />
           <Route
@@ -84,13 +91,19 @@ const App = () => (
           <Route
             path="/calendar"
             element={
+              <MainLayout>
               <div className="p-6 text-center">Calendar view coming soon!</div>
+              </MainLayout>
+
             }
           />
           <Route
             path="/analytics"
             element={
+              <MainLayout>
               <div className="p-6 text-center">Analytics dashboard coming soon!</div>
+              </MainLayout>
+
             }
           />
 

@@ -1,11 +1,6 @@
 # settings.py
 # Path: appointment/settings.py
 
-"""
-Author: Adams Pierre David
-Since: 1.0.0
-"""
-
 from django.conf import settings
 from django.conf.global_settings import DEFAULT_FROM_EMAIL
 

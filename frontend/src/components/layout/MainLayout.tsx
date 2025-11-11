@@ -11,35 +11,36 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/hooks/useAuth"; //
+import { userInfo } from "os";
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
+  const { logout, user } = useAuth(); // <- usamos logout
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Header */}
           <header className="flex h-14 items-center justify-between border-b bg-card px-4 shadow-soft">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div className="hidden md:block">
                 <h1 className="text-lg font-semibold text-foreground">
-                  Appointment Management
+                  Appointment Management - {user?.group || null}
                 </h1>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -51,16 +52,24 @@ export function MainLayout({ children }: MainLayoutProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Sign out</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await logout(); // llama al endpoint y limpia sessionStorage
+                      navigate("/login",{ replace: true }); // redirige al login
+                    }}
+                  >
+                    Sign out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </header>
-          
-          {/* Main Content */}
+
           <main className="flex-1 overflow-y-auto bg-gradient-card p-6">
             {children}
           </main>

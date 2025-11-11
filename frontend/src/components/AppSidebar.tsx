@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth"; // <- importamos useAuth
 import {
   Calendar,
   CalendarDays,
@@ -10,7 +11,6 @@ import {
   Home,
   CheckCircle,
   XCircle,
-  AlertCircle,
 } from "lucide-react";
 
 import {
@@ -30,7 +30,8 @@ const mainItems = [
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "Appointments", url: "/appointments", icon: CalendarDays },
   { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
-  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
+  { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
 ];
 
 const managementItems = [
@@ -47,6 +48,7 @@ const statusItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { user } = useAuth(); // <- obtenemos el usuario
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -75,16 +77,19 @@ export function AppSidebar() {
           <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainItems.map((item) => {
+                if (item.requiresAdmin && user?.group !== "Admins") return null; // <- solo admin
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} className={getNavCls}>
+                        <item.icon className="h-4 w-4" />
+                        {!isCollapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

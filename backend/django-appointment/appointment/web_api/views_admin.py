@@ -30,6 +30,7 @@ def staffs_list(request):
                 "last_name": s.user.last_name,
                 "slot_duration": s.slot_duration,
                 "services_offered": [service.name for service in s.services_offered.all()],
+                "email": s.user.email
             }
             for s in staffs
         ]
