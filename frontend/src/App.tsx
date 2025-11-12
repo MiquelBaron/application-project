@@ -16,6 +16,8 @@ import Login from "./pages/Login";
 import Staffs from "./pages/Staffs"
 import CalendarPage from "./pages/Calendar";
 import  ProtectedRoute  from "./components/ProtectedRoute";
+import  ProtectedAdmin  from "./components/ProtectedAdmin";
+import Services from "./pages/Services"
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,17 @@ const App = () => (
               <MainLayout>
               <div className="p-6 text-center"><Staffs></Staffs></div>
               </MainLayout>
+
+            }
+          />
+          <Route
+            path="/services"
+            element={
+              <ProtectedAdmin>
+              <MainLayout>
+              <div className="p-6 text-center"><Services/></div>
+              </MainLayout>
+              </ProtectedAdmin>
 
             }
           />

@@ -6,6 +6,7 @@ from .views.views import *
 
 staff_member_view = StaffMemberView.as_view()
 service_view = ServiceView.as_view()
+medical_view = MedicalRecordView.as_view()
 
 urlpatterns = [
     # Auth
@@ -33,4 +34,12 @@ urlpatterns = [
 
     # Clients
     path('clients/',get_clients,name='clients_list'),
+    path('clients/<int:client_id>/medical_records/',get_clients_medical_record,name='clients_list'),
+
+    # Medical records
+    path('medical_records/', MedicalRecordView.as_view(), name='medical_record_create'),
+    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_edit'),
+    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_delete'),
+    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_detail'),
+
 ]

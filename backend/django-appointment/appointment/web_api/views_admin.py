@@ -6,7 +6,7 @@ from guardian.backends import ObjectPermissionBackend
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 import json
 
-from appointment.models import StaffMember, Appointment, Service, Client
+from appointment.models import StaffMember, Appointment, Service, Client, MedicalRecord
 from appointment.logger_config import get_logger
 _logger = get_logger(__name__)
 
@@ -51,9 +51,20 @@ def create_service(request):
     if request.method == 'POST':
         service = Service()
 
+@login_required
 @permission_required('appointment.view_client', raise_exception=True)
 def get_clients(request):
     if request.method == 'GET':
-        clients = Client.objects.all().values('id', 'first_name', 'last_name', 'phone_number')
+        clients = Client.objects.all().values('id', 'first_name', 'last_name', 'phone_number','email')
         client_list = [{**c, 'phone_number': str(c['phone_number'])} for c in clients]
         return JsonResponse({'clients': client_list})
+
+@login_required
+def get_clients_medical_record(request, client_id:int):
+
+    if request.method == 'GET':
+        medical_record = MedicalRecord.objects.filter(client__id=client_id).first()
+        if not medical_record:
+            return JsonResponse({'medical_record': None})
+        return JsonResponse({'medical_record': model_to_dict(medical_record)})
+    return HttpResponseBadRequest()

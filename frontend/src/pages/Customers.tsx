@@ -1,24 +1,35 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useClients } from "@/hooks/useClients";
+import { useMedicalRecords } from "@/hooks/useMedicalRecord";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, User, Phone, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, User, Phone, MoreHorizontal, Eye, Edit, Trash2, FileText } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MedicalHistoryForm } from "@/components/MedicalHistoryForm";
 
-export default function Clients() {
-  const { csrfToken, isAuthenticated } = useAuth();
+export default function Customers() {
+  const { isAuthenticated } = useAuth();
+  const csrfToken = sessionStorage.getItem("csrfToken")
   const { data, error, isLoading } = useClients(csrfToken);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Abrir modal de Medical History
+  const openMedicalHistory = (client: any) => {
+    setSelectedClient(client);
+    setModalOpen(true);
+  };
 
   if (!isAuthenticated) return <p className="text-center text-red-500">Please login to see clients.</p>;
   if (isLoading) return <p className="text-center text-muted-foreground">Loading clients...</p>;
   if (error) return <p className="text-center text-red-500">Error loading clients: {error.message}</p>;
 
   const clients = data?.clients || [];
-  const filteredClients = clients.filter((c: any) => 
+  const filteredClients = clients.filter((c: any) =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -71,6 +82,7 @@ export default function Clients() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Phone</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -91,7 +103,24 @@ export default function Clients() {
                           {client.phone_number}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-sm">
+                          {client.email}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right flex justify-end items-center gap-2">
+                        {/* Medical History Button */}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => openMedicalHistory(client)}
+                          className="flex items-center gap-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Medical History
+                        </Button>
+
+                        {/* Dropdown for View/Edit/Delete */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -122,6 +151,24 @@ export default function Clients() {
           )}
         </CardContent>
       </Card>
+
+      {/* Medical History Modal */}
+      {modalOpen && selectedClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg overflow-y-auto max-h-[80vh]">
+            <CardHeader>
+              <CardTitle>Medical History: {selectedClient.first_name} {selectedClient.last_name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <MedicalHistoryForm
+                client={selectedClient}
+                csrfToken={csrfToken}
+                onClose={() => setModalOpen(false)}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 from django.forms.models import model_to_dict
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
@@ -19,6 +20,11 @@ class BaseModelView(View):
     def has_perm(self, request, perm_name):
         return (not perm_name) or request.user.has_perm(perm_name)
 
+    def get_object(self, object_id=None):
+        """Devuelve la instancia del modelo o 404"""
+        if object_id is None:
+            object_id = self.kwargs.get("object_id")
+        return get_object_or_404(self.model, id=object_id)
     def get_queryset(self, request):
         return self.model.objects.all()
 
@@ -50,6 +56,7 @@ class BaseModelView(View):
         return JsonResponse(data, status=201)
 
     def put(self, request, object_id):
+        print(request)
         if not self.has_perm(request, self.permission_edit):
             return JsonResponse({'error': 'Forbidden'}, status=403)
 
@@ -80,3 +87,8 @@ class BaseModelView(View):
 
         obj.delete()
         return JsonResponse({'status': 'deleted'})
+
+    from django.http import JsonResponse
+
+    def json_response(self, data, status=200):
+        return JsonResponse(data, status=status)

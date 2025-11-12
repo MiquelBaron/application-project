@@ -562,19 +562,38 @@ There was a 'Staff entity' but Clients where just users without staff permission
 Now there is a 'Client' entity to make easier to interact with Client methods and validations.
 '''
 class Client(models.Model):
+    CLIENT_SOURCE_CHOICES = [
+        ('referral', 'Referred by another patient'),
+        ('website', 'Website'),
+        ('social_media', 'Social media'),
+        ('advertisement', 'Advertisement'),
+        ('event', 'Event / Fair'),
+        ('other', 'Other'),
+    ]
     id = models.BigAutoField(primary_key=True)
+    source = models.CharField(
+        max_length=50,
+        choices=CLIENT_SOURCE_CHOICES,
+        default='other',
+    )
     first_name = models.CharField(max_length=255, help_text="Nom")
     last_name = models.CharField(max_length=255, help_text="Cognoms")
     phone_number = PhoneNumberField(max_length=20, help_text="Telèfon", unique=True)
     email = models.EmailField(help_text="Adreça electrònica")
     extra_info = models.TextField(blank=True, null=True, max_length=1000, help_text="Informació addicional.")
-
+    date_of_birth = models.DateField(null=True, blank=True, help_text="Data de naixement")
+    gender = models.CharField(
+        max_length=10,
+        choices=[("M", "Male"), ("F", "Female"), ("O", "Other")],
+        blank=True,
+        null=True,
+        help_text="Gender"
+    )
+    address = models.CharField(max_length=255, blank=True, null=True, help_text="Zip code")
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Methods are not implemented yet ...
 
     class Meta:
         verbose_name = _("Client")
@@ -596,4 +615,49 @@ class Client(models.Model):
         return cls.objects.filter(phone_number=phone_str).exists()
 
 
+class MedicalRecord(models.Model):
+    client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name="medical_record")
 
+    allergies = models.TextField(blank=True, null=True, help_text="Known allergies")
+    medical_conditions = models.TextField(blank=True, null=True, help_text="Current medical conditions")
+    medications = models.TextField(blank=True, null=True, help_text="Current medications")
+    notes = models.TextField(blank=True, null=True, help_text="Doctor notes")
+    blood_type = models.CharField(
+        max_length=3,
+        blank=True,
+        null=True,
+        choices=[("A+", "A+"), ("A-", "A-"), ("B+", "B+"), ("B-", "B-"), ("AB+", "AB+"), ("AB-", "AB-"), ("O+", "O+"), ("O-", "O-")],
+    )
+
+    def __str__(self):
+        return f"Fitxa mèdica de {self.client.first_name} {self.client.last_name}"
+
+
+class Invoice(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="invoices")
+    appointment = models.OneToOneField(Appointment, on_delete=models.SET_NULL, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2)
+    paid = models.BooleanField(default=False)
+    payment_date = models.DateTimeField(null=True, blank=True)
+    payment_method = models.CharField(
+        max_length=20,
+        choices=[("cash", "Cash"), ("card", "Card"), ("transfer", "Bank transfer"), ("insurance", "Insurance")]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def mark_as_paid(self):
+        self.paid = True
+        self.payment_date = timezone.now()
+        self.save()
+
+# For BI (KPI or events) --> new
+class ActivityLog(models.Model):
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    target_type = models.CharField(max_length=100, blank=True, null=True)
+    target_id = models.IntegerField(blank=True, null=True)
+    details = models.JSONField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']

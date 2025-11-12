@@ -11,6 +11,10 @@ import {
   Home,
   CheckCircle,
   XCircle,
+  ClipboardCheck,
+  Stethoscope,
+  HeartCrack,
+  Tablet
 } from "lucide-react";
 
 import {
@@ -32,6 +36,8 @@ const mainItems = [
   { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
   { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
   { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
+  { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
+
 ];
 
 const managementItems = [

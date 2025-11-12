@@ -15,12 +15,16 @@ from django.contrib import admin
 import datetime
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import Service, Client, DayOff, Appointment, StaffMember, Config, User
+from .models import Service, Client, DayOff, Appointment, StaffMember, Config, User, MedicalRecord
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 # TODO Extract forms to forms.py to be used in user interface too.
+
+@admin.register(MedicalRecord)
+class MedicalRecordAdmin(admin.ModelAdmin):
+    list_display = ('client',)
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):

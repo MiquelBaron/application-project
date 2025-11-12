@@ -39,6 +39,7 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
 
   const staffColors: Record<string, string> = {
     "Aleix Rebollo": "#3182ce",
+    
     "Raquel Admin": "#38a169",
   };
 
@@ -65,7 +66,7 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
     <div className="p-4 bg-white rounded-lg shadow-md h-[700px]">
   <Calendar
     localizer={localizer}
-    events={events} // cambia a `events` cuando tengas citas reales
+    events={events}
     startAccessor="start"
     endAccessor="end"
     titleAccessor="title"
