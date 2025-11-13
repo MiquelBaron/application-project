@@ -9,11 +9,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, User, Phone, MoreHorizontal, Eye, Edit, Trash2, FileText } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MedicalHistoryForm } from "@/components/MedicalHistoryForm";
-
+import { useReport } from "@/hooks/useReport";
 export default function Customers() {
-  const { isAuthenticated } = useAuth();
-  const csrfToken = sessionStorage.getItem("csrfToken")
-  const { data, error, isLoading } = useClients(csrfToken);
+    const { exportMedicalHistory, loading } = useReport();
+
+    const [newClientModalOpen, setNewClientModalOpen] = useState(false);
+const [newClientData, setNewClientData] = useState({
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone_number: "",
+});
+  const { csrfToken, isAuthenticated } = useAuth();
+  const { data, createClient, error, isLoading } = useClients(csrfToken);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,10 +49,13 @@ export default function Customers() {
           <h1 className="text-3xl font-bold text-foreground">Clients</h1>
           <p className="text-muted-foreground">Manage and view all your clients</p>
         </div>
-        <Button className="bg-gradient-primary text-white hover:opacity-90">
-          <User className="mr-2 h-4 w-4" />
-          New Client
-        </Button>
+        <Button 
+  className="bg-gradient-primary text-white hover:opacity-90" 
+  onClick={() => setNewClientModalOpen(true)}
+>
+  <User className="mr-2 h-4 w-4" />
+  New Client
+</Button>
       </div>
 
       {/* Search */}
@@ -127,7 +138,14 @@ export default function Customers() {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
+                          
                           <DropdownMenuContent align="end">
+                                              <DropdownMenuItem
+                        onClick={() => exportMedicalHistory(client.id)}
+                      >
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Export Medical History
+                      </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Eye className="mr-2 h-4 w-4" />
                               View
@@ -151,6 +169,73 @@ export default function Customers() {
           )}
         </CardContent>
       </Card>
+
+      {newClientModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <Card className="w-full max-w-md overflow-y-auto max-h-[80vh] p-6 relative animate-scaleIn">
+      {/* Cerrar modal */}
+      <button
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+        onClick={() => setNewClientModalOpen(false)}
+        aria-label="Close"
+      >
+        ✖
+      </button>
+
+      {/* Header */}
+      <CardHeader>
+        <CardTitle>New Client</CardTitle>
+        <CardDescription>Fill in the details to create a new client</CardDescription>
+      </CardHeader>
+
+      {/* Form */}
+      <CardContent className="space-y-4">
+        <Input
+          placeholder="First Name"
+          value={newClientData.first_name}
+          onChange={(e) => setNewClientData({ ...newClientData, first_name: e.target.value })}
+        />
+        <Input
+          placeholder="Last Name"
+          value={newClientData.last_name}
+          onChange={(e) => setNewClientData({ ...newClientData, last_name: e.target.value })}
+        />
+        <Input
+          placeholder="Email"
+          type="email"
+          value={newClientData.email}
+          onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+        />
+        <Input
+          placeholder="Phone Number"
+          value={newClientData.phone_number}
+          onChange={(e) => setNewClientData({ ...newClientData, phone_number: e.target.value })}
+        />
+      </CardContent>
+
+      {/* Footer */}
+      <div className="mt-4 flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => setNewClientModalOpen(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          className="bg-blue-600 text-white hover:bg-blue-700"
+          onClick={async () => {
+            await createClient(csrfToken, newClientData); // Usa tu hook o función
+            setNewClientModalOpen(false);
+            setNewClientData({ first_name: "", last_name: "", email: "", phone_number: "" });
+          }}
+        >
+          Create
+        </Button>
+      </div>
+    </Card>
+  </div>
+)}
+
 
       {/* Medical History Modal */}
       {modalOpen && selectedClient && (

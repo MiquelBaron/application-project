@@ -15,5 +15,20 @@ export function useClients(csrfToken: string | null) {
     fetcher
   );
 
-  return { data, error, mutate, isLoading };
+  const createClient = async (csrfToken: string, payload: any) => {
+    if (!csrfToken || !payload) return;
+    await fetch(`http://localhost:8001/v1/api/clients/`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({ ...payload}),
+    });
+    mutate();
+  };
+
+
+  return { data, createClient, error, mutate, isLoading };
 }

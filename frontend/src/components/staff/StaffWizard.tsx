@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function StaffWizard({ onSuccess }: { onSuccess?: () => void }) {
   const [step, setStep] = useState(1);
@@ -21,14 +22,14 @@ export function StaffWizard({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    const {csrfToken} = useAuth();
     try {
-      const csrfToken = localStorage.getItem("csrfToken");
       const res = await fetch("http://localhost:8001/v1/api/staffs/", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+          "X-CSRFToken": csrfToken 
         },
         body: JSON.stringify(formData),
       });

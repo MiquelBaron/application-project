@@ -701,7 +701,11 @@ def get_absolute_url_(relative_url, request):
 from appointment.models import Service, Client
 
 
-def get_staffs_assigned_to_service(service_name:str):
-    service = get_object_or_404(Service, name__iexact=service_name)
+def get_staffs_assigned_to_service(service:str|int):
+    if isinstance(service, int):
+        service = Service.objects.get(id=service)
+    elif isinstance(service, str):
+        service = get_object_or_404(Service, name__iexact=service)
+
     staffs = service.assigned_staff
     return staffs or []

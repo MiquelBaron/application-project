@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+
 import {
   Calendar,
   CalendarDays,
@@ -12,7 +14,9 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-
+import { useState } from "react";
+import AppointmentWizard from "@/components/bookAppt/AppointmentWizard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // si usas shadcn/ui
 import { useNavigate } from "react-router-dom"; 
 
 import { useEffect } from "react";
@@ -124,6 +128,8 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function Dashboard() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate(); // <-- Reemplaza router
 
@@ -147,7 +153,10 @@ export default function Dashboard() {
             Welcome back! Here's an overview of your appointments.
           </p>
         </div>
-        <Button className="bg-gradient-primary text-white hover:opacity-90">
+        <Button
+          className="bg-gradient-primary text-white hover:opacity-90"
+          onClick={() => setWizardOpen(true)}
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           New Appointment
         </Button>
@@ -218,6 +227,23 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Book a New Appointment</DialogTitle>
+          </DialogHeader>
+
+          <AppointmentWizard
+            onComplete={() => {
+                toast({ title: "Appointment booked successfully!" });
+              setWizardOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
     </div>
+    
+    
   );
 }

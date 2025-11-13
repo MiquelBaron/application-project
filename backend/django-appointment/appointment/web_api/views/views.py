@@ -1,7 +1,10 @@
 
 from django.core.exceptions import ValidationError
+from django.forms import model_to_dict
 
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
+
+from appointment.core.db_helpers import get_staffs_assigned_to_service
 from appointment.models import Appointment, StaffMember, Service, Client
 from appointment.core.api_helpers import create_appointment_safe, get_availability_for_service_across_staffs
 from datetime import datetime
@@ -169,3 +172,114 @@ def availability(request, service_name, date_str):
 
     slots = get_availability_for_service_across_staffs(service_name, day)
     return JsonResponse({'slots': slots})
+
+
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from django.http import HttpResponse
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def export_medical_history(request, patient_id):
+    try:
+        patient = Client.objects.get(id=patient_id)
+    except Client.DoesNotExist:
+        return HttpResponse("Patient not found.", status=404)
+
+    record = getattr(patient, "medical_record", None)
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="medical_history_{patient_id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("Medical History Report", styles['Title']))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # Datos del paciente
+    patient_data = [
+        ["Full Name", patient.get_full_name()],
+        ["Email", patient.email or "N/A"],
+        ["Phone", patient.phone_number or "N/A"],
+        ["Date of Birth", patient.date_of_birth.strftime("%d/%m/%Y") if patient.date_of_birth else "N/A"],
+        ["Gender", patient.get_gender_display() if patient.gender else "N/A"],
+        ["Address", patient.address or "N/A"],
+    ]
+    elements.append(Paragraph("Patient Information", styles['Heading2']))
+    table = Table(patient_data, hAlign='LEFT', colWidths=[120, 300])
+    table.setStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                    ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
+                    ('GRID', (0,0), (-1,-1), 1, colors.black)])
+    elements.append(table)
+    elements.append(Spacer(1, 12))
+
+    # Historial médico
+    elements.append(Paragraph("Medical Record", styles['Heading2']))
+    record_data = [
+        ["Blood Type", record.blood_type or "N/A"] if record else ["Blood Type", "N/A"],
+        ["Allergies", record.allergies or "N/A"] if record else ["Allergies", "N/A"],
+        ["Medical Conditions", record.medical_conditions or "N/A"] if record else ["Medical Conditions", "N/A"],
+        ["Medications", record.medications or "N/A"] if record else ["Medications", "N/A"],
+        ["Notes", record.notes or "N/A"] if record else ["Notes", "N/A"],
+    ]
+    table2 = Table(record_data, hAlign='LEFT', colWidths=[120, 300])
+    table2.setStyle([('GRID', (0,0), (-1,-1), 1, colors.black)])
+    elements.append(table2)
+
+    doc.build(elements)
+    return response
+
+@login_required
+def get_staffs_by_service(request, service_id:int):
+    print("Recieved request", service_id)
+    if request.method != 'GET':
+        return HttpResponseBadRequest()
+    print("get staffs by service", service_id)
+    staffs = get_staffs_assigned_to_service(service_id)
+    result = []
+    for staff in staffs:
+        result.append(
+            {"name":staff.user.first_name + " " + staff.user.last_name,
+             "id":staff.user.id
+             })
+
+    return JsonResponse(result, safe=False)
+
+
+from appointment.core.api_helpers import get_available_slots_for_service
+@login_required
+def availability_for_staff(request, staff_id, service_id, day_str):
+    """
+    Devuelve los slots disponibles para un staff y servicio en un día específico.
+    day_str = 'YYYY-MM-DD'
+    """
+    from datetime import datetime
+
+    staff = StaffMember.objects.get(user__id=staff_id)
+    service = Service.objects.get(id=service_id)
+    day = datetime.strptime(day_str, "%Y-%m-%d").date()
+
+    appointments = Appointment.objects.filter(staff_member=staff, date=day)
+    slots = get_available_slots_for_service(staff, day, service, appointments_of_day=appointments)
+
+    # Devolver como ISO strings
+    slot_strings = [s.isoformat(sep=" ") for s in slots]
+    return JsonResponse({"slots": slot_strings})
+
+def get_session(request):
+    user = request.user
+    return JsonResponse({
+        "user_id": user.id,
+        "username": user.username,
+        "group": user.groups.first().name if user.groups.exists() else None,
+        "is_superuser": user.is_superuser,
+        "staff_info": getattr(user, "staff_info", None),
+    })

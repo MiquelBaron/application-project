@@ -76,7 +76,7 @@ class ServiceForm(forms.ModelForm):
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     form = ServiceForm
-    list_display = ('name', 'duration', 'price', 'get_staff_members', 'created_at', 'updated_at',)
+    list_display = ('id','name', 'duration', 'price', 'get_staff_members', 'created_at', 'updated_at',)
     search_fields = ('name',)
     list_filter = ('duration',)
     readonly_fields = ('get_staff_members',)

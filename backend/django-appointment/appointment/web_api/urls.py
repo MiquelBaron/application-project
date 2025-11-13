@@ -12,11 +12,13 @@ urlpatterns = [
     # Auth
     path('login/', login_user, name='staff_login'),
     path('logout/', logout_user, name='staff_logout'),
+    path('session/', get_session, name='session'),
 
     # Staff Members
     path('staffs/', staffs_list, name='staffs_list'),
     path('staffs/<int:object_id>/', staff_member_view, name='staff_detail'),  # BaseModelView
     path('staffs/create/', staff_member_view, name='staff_create'),  # POST
+    path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),
 
     # Services
     path('services/', services_list, name='services_list'),
@@ -25,6 +27,8 @@ urlpatterns = [
     path('services/<int:object_id>/edit/', service_view, name='service_edit'),  # PUT
     path('services/<int:object_id>/delete/', service_view, name='service_delete'),  # DELETE
 
+    # Staffs by service
+    path('staffs-by-service/<int:service_id>/', get_staffs_by_service, name='staffs_by_service'),
     # Appointments
     path('appointments/', list_appointments, name='appointments_list'),  # GET & POST
     path('appointments/<int:appointment_id>/', appointment_detail, name='appointment_detail'),
@@ -41,5 +45,8 @@ urlpatterns = [
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_edit'),
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_delete'),
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_detail'),
+
+    # Report
+    path("export-history/<int:patient_id>/", export_medical_history, name="export_medical_history"),
 
 ]
