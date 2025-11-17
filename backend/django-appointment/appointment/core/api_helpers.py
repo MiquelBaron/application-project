@@ -36,6 +36,9 @@ def get_available_slots_for_service(staff: StaffMember, day: datetime.date, serv
     working_end = to_dt(day, wh.end_time)
 
     valid_slots = filter_slots_for_service(base_slots, slot_td, service.duration, working_end, occupied_slots, blocked_slots)
+    now = datetime.now()
+    if day == now.date():
+        valid_slots = [s for s in valid_slots if s > now]
     return valid_slots
 from appointment.core.db_helpers import get_staffs_assigned_to_service
 

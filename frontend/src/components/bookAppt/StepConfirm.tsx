@@ -1,54 +1,75 @@
 "use client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAppointments } from "@/hooks/useAppointment";
 
 interface StepConfirmProps {
   client: any;
   service: any;
   doctor: any;
-  day: string;
-  slot: string;
+  day: string;      // "YYYY-MM-DD"
+  slot: string;     // "HH:MM"
   goBack: () => void;
-  onComplete?: () => void; // <- nuevo
+  onComplete?: () => void;
 }
 
 export default function StepConfirm({ client, service, doctor, day, slot, goBack, onComplete }: StepConfirmProps) {
-  const handleConfirm = async () => {
-    const [dateStr, timeStr] = slot.split(" ");
-    const [year, month, dayNum] = dateStr.split("-").map(Number);
-    const [hour, minute] = timeStr.split(":").map(Number);
+  const { createAppointment, loading, error } = useAppointments();
+  const [localError, setLocalError] = useState<string | null>(null);
 
-    const res = await fetch("/v1/api/appointments/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: client.id,
-        staff_id: doctor.id,
-        service_id: service.id,
-        date: `${year}-${month}-${dayNum}`,
-        start_time: `${hour}:${minute}:00`,
-      }),
+  const handleConfirm = async () => {
+  if (!client || !service || !doctor) {
+    setLocalError("Missing client!");
+    return;
+  }
+  else if(!service){
+    setLocalError("Missing service")
+    return
+  }
+  else if(!doctor){
+    setLocalError("Missing doctor")
+    return
+  }
+
+  try {
+    const [hour, minute] = slot.split(":").map(Number);
+    const [year, month, dayNum] = day.split("-").map(Number);
+
+    const startDate = new Date(year, month - 1, dayNum, hour, minute);
+    const endDate = new Date(startDate.getTime() + service.duration * 60 * 1000);
+
+    await createAppointment({
+      client_id: client.id,
+      staff_id: doctor.id,
+      service_id: service.id,
+      date: startDate.toISOString().split("T")[0],
+      start_time: startDate.toTimeString().slice(0, 8),
+      end_time: endDate.toTimeString().slice(0, 8),
     });
 
-    if (res.ok) {
-      alert("Appointment booked!");
-      if (onComplete) onComplete(); // <- llama al callback si existe
-    } else {
-      const err = await res.json();
-      alert("Error: " + (err.detail || "Failed to book"));
-    }
-  };
+    alert("Appointment booked!");
+    onComplete?.();
+  } catch (err: any) {
+    setLocalError(err.message || "Failed to book appointment");
+  }
+};
+
 
   return (
-    <div>
-      <h3 className="font-bold mb-2">Confirm Appointment</h3>
+    <div className="space-y-3">
+      <h3 className="font-bold text-lg">Confirm Appointment</h3>
       <p>Service: {service.name}</p>
-      <p>Doctor: {doctor.name} </p>
-      <p>Day & Time: {slot}</p>
+      <p>Doctor: {doctor.name}</p>
+      <p>Day & Time: {day} {slot}</p>
 
-      <div className="flex justify-between mt-2">
-        <Button onClick={goBack}>Back</Button>
-        <Button onClick={handleConfirm}>Confirm</Button>
+      {localError && <p className="text-red-500">{localError}</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      <div className="flex justify-between mt-4">
+        <Button variant="outline" onClick={goBack} disabled={loading}>Back</Button>
+        <Button onClick={handleConfirm} disabled={loading}>
+          {loading ? "Booking..." : "Confirm"}
+        </Button>
       </div>
     </div>
   );
