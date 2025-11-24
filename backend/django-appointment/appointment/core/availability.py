@@ -8,6 +8,7 @@ from datetime import datetime, date, time, timedelta
 
 from typing import List, Set, Iterable, Optional
 
+from appointment.core.db_helpers import get_weekday_num_from_date
 from appointment.models import Appointment, WorkingHours, DayOff, StaffMember
 from appointment.logger_config import get_logger
 _logger = get_logger(__name__)
@@ -19,9 +20,15 @@ def to_dt(d: datetime.date, t: datetime.time) -> datetime:
     return datetime.combine(d, t)
 
 def generate_base_slots_for_day(staff: StaffMember, day: datetime.date) -> List[datetime]:
-    working_hours = WorkingHours.objects.filter(staff_member=staff, day_of_week=day.isoweekday()).first()
+    print(day.weekday())
+
+    working_hours = WorkingHours.objects.filter(staff_member=staff, day_of_week=day.weekday()).first()
     if not working_hours:
         _logger.warning(f"No working hours for staff {staff.user.username} on day {day}")
+        return []
+    print("days off")
+    print(staff.get_days_off())
+    if day in staff.get_days_off():
         return []
 
     slot_td = timedelta(minutes=staff.get_slot_duration())

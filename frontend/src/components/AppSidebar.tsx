@@ -45,12 +45,6 @@ const managementItems = [
   { title: "Configuration", url: "/settings", icon: Settings },
 ];
 
-const statusItems = [
-  { title: "Pending", url: "/appointments?status=pending", icon: Clock },
-  { title: "Confirmed", url: "/appointments?status=confirmed", icon: CheckCircle },
-  { title: "Cancelled", url: "/appointments?status=cancelled", icon: XCircle },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
@@ -96,24 +90,6 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Status Filters</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {statusItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

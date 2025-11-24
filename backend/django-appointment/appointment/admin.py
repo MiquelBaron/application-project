@@ -28,7 +28,7 @@ class MedicalRecordAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    list_display = ('username', 'email', 'get_groups')
+    list_display = ('id','username', 'email', 'get_groups')
 
     def get_groups(self, obj):
         return ", ".join([g.name for g in obj.groups.all()])
@@ -156,7 +156,7 @@ class StaffMemberForm(forms.ModelForm):
 class StaffMemberAdmin(admin.ModelAdmin):
     form = StaffMemberForm
     list_display = (
-        'get_staff_member_name', 'get_slot_duration','get_services_offered', 'finish_time', 'work_on_saturday', 'work_on_sunday')
+        'id','get_staff_member_name', 'get_slot_duration','get_services_offered', 'finish_time', 'work_on_saturday', 'work_on_sunday')
     list_filter = ('work_on_saturday', 'work_on_sunday', 'lead_time', 'finish_time')
 
 

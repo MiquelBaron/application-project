@@ -24,14 +24,15 @@ PAYMENT_TYPES = (
 )
 
 DAYS_OF_WEEK = (
-    (0, 'Sunday'),
-    (1, 'Monday'),
-    (2, 'Tuesday'),
-    (3, 'Wednesday'),
-    (4, 'Thursday'),
-    (5, 'Friday'),
-    (6, 'Saturday'),
+    (0, 'Monday'),
+    (1, 'Tuesday'),
+    (2, 'Wednesday'),
+    (3, 'Thursday'),
+    (4, 'Friday'),
+    (5, 'Saturday'),
+    (6, 'Sunday'),
 )
+
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
@@ -78,7 +79,7 @@ class Service(models.Model):
         seconds = total_seconds % 60
         return days, hours, minutes, seconds
 
-    def get_duration(self):
+    def get_duration_readable(self):
         days, hours, minutes, seconds = self.get_duration_parts()
         parts = []
 

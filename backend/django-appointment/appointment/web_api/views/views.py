@@ -24,8 +24,6 @@ def list_appointments(request):
     POST/appointments/
     Admin --> can see all appointments
     Staff --> can only see his own appointments
-    :param request:
-    :return:
     """
     user = request.user
     if request.method == 'GET':
@@ -53,17 +51,36 @@ def list_appointments(request):
         return JsonResponse({'appointments': data})
 
     if request.method == 'POST':
+        print("POST data received:", request.body)
+
         if not user.has_perm('appointment.add_appointment'):
             return HttpResponseForbidden()
+
         try:
             data = json.loads(request.body)
-            staff = StaffMember.objects.get(id=data['staff_id'])
-            service = Service.objects.get(id=data['service_id'])
-            client = Client.objects.get(id=data['client_id'])
-            appt_date = datetime.strptime(data['date'], "%Y-%m-%d").date()
-            appt_start = datetime.strptime(data['start_time'], "%H:%M").time()
-            appt_end = datetime.strptime(data['end_time'], "%H:%M").time()
+            print("Parsed JSON data:", data)
 
+            staff = StaffMember.objects.get(user__id=data['staff_id'])
+            print("Staff found:", staff)
+
+            service = Service.objects.get(id=data['service_id'])
+            print("Service found:", service, "duration:", service.duration)
+
+            client = Client.objects.get(id=data['client_id'])
+            print("Client found:", client)
+
+            appt_date = datetime.strptime(data['date'], "%Y-%m-%d").date()
+            print("Appointment date:", appt_date)
+
+            appt_start = datetime.strptime(data['start_time'], "%H:%M").time()
+            print("Appointment start time:", appt_start)
+
+            start_dt = datetime.combine(appt_date, appt_start)
+            end_dt = start_dt + service.duration
+            appt_end = end_dt.time()
+            print("Computed appointment end time:", appt_end)
+
+            # Llamada al método seguro
             appt = create_appointment_safe(
                 client=client,
                 staff=staff,
@@ -73,12 +90,17 @@ def list_appointments(request):
                 appt_end_time=appt_end,
                 additional_info=data.get('additional_info', '')
             )
+            print("Appointment created successfully:", appt.id)
+
             return JsonResponse({'success': True, 'appointment_id': appt.id})
 
         except (KeyError, ValueError, Client.DoesNotExist, StaffMember.DoesNotExist, Service.DoesNotExist) as e:
+            print("Exception caught:", e)
             return HttpResponseBadRequest(str(e))
         except ValidationError as ve:
+            print("ValidationError:", ve)
             return JsonResponse({'success': False, 'error': ve.message})
+
 
 @login_required
 def appointment_detail(request, appointment_id):

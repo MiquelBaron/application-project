@@ -4,7 +4,7 @@ export function useAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const csrfToken = sessionStorage.getItem("csrfToken") || "";
+ 
 
   // Debugging seguro: log cuando appointments cambie
   useEffect(() => {
@@ -35,21 +35,28 @@ export function useAppointments() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const createAppointment = async (newAppointment: any) => {
-    const res = await fetch("http://localhost:8001/v1/api/appointments/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken,
-      },
-      credentials: "include",
-      body: JSON.stringify(newAppointment),
-    });
-    if (!res.ok) throw new Error("Error creating appointment");
-    await fetchAppointments();
-  };
+const createAppointment = async (newAppointment: any, csrfToken: string) => {
+  const res = await fetch("http://localhost:8001/v1/api/appointments/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
+    },
+    credentials: "include",
+    body: JSON.stringify(newAppointment),
+  });
 
-  const updateAppointment = async (id: number, updatedData: any) => {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error creating appointment: ${res.status} ${text}`);
+  }
+
+  const created = await res.json();
+  await fetchAppointments(); // opcional: refresca la lista de appointments
+  return created;
+};
+
+  const updateAppointment = async (id: number, updatedData: any, csrfToken) => {
     const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
       method: "PUT",
       headers: {
@@ -63,7 +70,7 @@ export function useAppointments() {
     await fetchAppointments();
   };
 
-  const deleteAppointment = async (id: number) => {
+  const deleteAppointment = async (id: number,csrfToken) => {
     const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
       method: "DELETE",
       headers: { "X-CSRFToken": csrfToken },
@@ -76,7 +83,6 @@ export function useAppointments() {
   const getAppointmentInfo = async (id: number) => {
     const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
       method: "GET",
-      headers: { "X-CSRFToken": csrfToken },
       credentials: "include",
     });
     if (!res.ok) throw new Error("Error getting appointment info");
