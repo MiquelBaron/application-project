@@ -3,6 +3,8 @@
 
 
 import datetime
+
+from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -662,3 +664,16 @@ class ActivityLog(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    message = models.JSONField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user} - {self.created_at}"

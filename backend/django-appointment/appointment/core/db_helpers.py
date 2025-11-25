@@ -33,17 +33,7 @@ logger = get_logger(__name__)
 # Check if django-q is installed in settings
 DJANGO_Q_AVAILABLE = 'django_q' in settings.INSTALLED_APPS
 
-# Check if django-q is installed as a dependency
-try:
-    from django_q.models import Schedule
-    from django_q.tasks import schedule
 
-    DJANGO_Q_AVAILABLE = True
-except ImportError:
-    DJANGO_Q_AVAILABLE = False
-    Schedule = None
-    schedule = None
-    logger.warning("django-q is not installed. Email reminders will not be scheduled.")
 
 Appointment = apps.get_model('appointment', 'Appointment')
 WorkingHours = apps.get_model('appointment', 'WorkingHours')

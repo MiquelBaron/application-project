@@ -3,6 +3,7 @@ from .views_admin import *
 from .views.admin_views import *
 from .views.auth import *
 from .views.views import *
+from appointment.notifications.sse import notification_stream
 
 staff_member_view = StaffMemberView.as_view()
 service_view = ServiceView.as_view()
@@ -48,5 +49,8 @@ urlpatterns = [
 
     # Report
     path("export-history/<int:patient_id>/", export_medical_history, name="export_medical_history"),
+
+    # SSE
+    path('stream/', notification_stream, name='notification-stream'),
 
 ]

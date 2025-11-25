@@ -32,7 +32,7 @@ def get_available_slots_for_service(staff: StaffMember, day: datetime.date, serv
     occupied_slots = compute_occupied_slots_from_appointments(staff, day, base_slots, appointments_of_day)
     blocked_slots = compute_blocked_slots(staff, day, base_slots, slot_td)
 
-    wh = WorkingHours.objects.filter(staff_member=staff, day_of_week=day.isoweekday()).first()
+    wh = WorkingHours.objects.filter(staff_member=staff, day_of_week=day.weekday()).first()
     working_end = to_dt(day, wh.end_time)
 
     valid_slots = filter_slots_for_service(base_slots, slot_td, service.duration, working_end, occupied_slots, blocked_slots)

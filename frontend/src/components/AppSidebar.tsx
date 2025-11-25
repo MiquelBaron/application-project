@@ -14,7 +14,8 @@ import {
   ClipboardCheck,
   Stethoscope,
   HeartCrack,
-  Tablet
+  Tablet,
+  Bell
 } from "lucide-react";
 
 import {
@@ -37,6 +38,7 @@ const mainItems = [
   { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
   { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
   { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
+  { title: "Notifications", url: "/notifications", icon: Bell } ,
 
 ];
 
@@ -48,7 +50,7 @@ const managementItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth(); // <- obtenemos el usuario
+  const { user } = useAuth(); //
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;

@@ -16,6 +16,7 @@ import { userInfo } from "os";
 interface MainLayoutProps {
   children: React.ReactNode;
 }
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();

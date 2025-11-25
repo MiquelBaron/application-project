@@ -1,10 +1,6 @@
 # apps.py
 # Path: appointment/apps.py
 
-"""
-Author: Adams Pierre David
-Since: 1.0.0
-"""
 
 from django.apps import AppConfig
 

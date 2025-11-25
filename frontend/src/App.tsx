@@ -19,6 +19,7 @@ import  ProtectedRoute  from "./components/ProtectedRoute";
 import  ProtectedAdmin  from "./components/ProtectedAdmin";
 import Services from "./pages/Services"
 import NewAppointmentPage from "./pages/NewAppointment";
+import NotificationPage from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +128,15 @@ const App = () => (
             element={
               <MainLayout>
               <div className="p-6 text-center">Calendar view coming soon!</div>
+              </MainLayout>
+
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <MainLayout>
+              <NotificationPage/>
               </MainLayout>
 
             }
