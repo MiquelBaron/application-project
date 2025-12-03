@@ -138,8 +138,7 @@ class Service(models.Model):
 
 class StaffMember(models.Model):
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    #role = models.ForeignKey(Roles, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     services_offered = models.ManyToManyField(Service, related_name='staff_members', blank=True)
     slot_duration = models.PositiveIntegerField(
         null=True, blank=True, default=30,
@@ -160,6 +159,9 @@ class StaffMember(models.Model):
                     "minutes, the first available slot will be at 9:00 AM. If you set the appointment buffer time to "
                     "60 minutes, the first available slot will be at 9:30 AM.")
     )
+
+    set_timetable = models.BooleanField(default=False)
+
     work_on_saturday = models.BooleanField(default=False)
     work_on_sunday = models.BooleanField(default=False)
 

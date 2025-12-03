@@ -165,7 +165,6 @@ export default function AppointmentWizard({ onComplete }: AppointmentWizardProps
                 selected={selectedDate ?? undefined}
                 onSelect={(date) => {
                   if (!date) return;
-                  // Crear date solo con año, mes y día para evitar problemas de zona horaria
                   const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                   setSelectedDate(localDate);
                   setSelectedTime(null); // reset time

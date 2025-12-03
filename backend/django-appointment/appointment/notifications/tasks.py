@@ -19,7 +19,9 @@ def send_appointment_notification(appointment_id):
 
         # Obtener grupo admins
         try:
-            admin_group = Group.objects.get(name='Admins')
+            admin_group = Group.objects.get(name='A'
+                                                 ''
+                                                 'dmins')
             admins = admin_group.user_set.all()
         except Group.DoesNotExist:
             logger.warning("El grupo 'admins' no existe")

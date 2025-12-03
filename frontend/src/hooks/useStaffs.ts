@@ -6,6 +6,7 @@ export function useStaffs(csrfToken?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+
     const fetchStaffs = async () => {
       setIsLoading(true);
       setError(null);
@@ -31,6 +32,10 @@ export function useStaffs(csrfToken?: string) {
         setIsLoading(false);
       }
     };
+
+    const editStaff = async () =>{
+      
+    }
 
     fetchStaffs();
   }, [csrfToken]);

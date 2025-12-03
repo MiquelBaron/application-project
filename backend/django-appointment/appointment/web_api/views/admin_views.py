@@ -2,17 +2,130 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 
-from appointment.models import StaffMember, Service, MedicalRecord
+from appointment.models import StaffMember, Service, MedicalRecord, WorkingHours
 from .base import BaseModelView
+from appointment.models import User
 import json
 from datetime import timedelta
 import isodate
+
+from django.http import JsonResponse
+from django.forms.models import model_to_dict
+from django.core.exceptions import ObjectDoesNotExist
+
+from django.http import JsonResponse
+from django.forms.models import model_to_dict
+
 class StaffMemberView(BaseModelView):
     model = StaffMember
-    list_fields = ['id', 'user_id', 'slot_duration']
+    list_fields = ['id','slot_duration','set_timetable','user__email']  # 👈 Quitamos los que no son simples
     detail_fields = ['id', 'user_id', 'slot_duration', 'lead_time', 'finish_time']
     permission_view = 'appointment.view_staffmember'
     permission_edit = 'appointment.change_staffmember'
+    permission_create = 'appointment.add_staffmember'
+
+    def serialize_list_item(self, obj):
+        """Serializador seguro para la lista"""
+        data = model_to_dict(obj, fields=self.list_fields)
+
+        # Campos relacionados (no entran en model_to_dict)
+        data['user_first_name'] = obj.user.first_name
+        data['user_last_name'] = obj.user.last_name
+        data['email'] = obj.user.email
+        # ManyToMany serializado correctamente
+        data['services_offered'] = list(obj.services_offered.values('id', 'name'))
+
+        return data
+
+    def get(self, request, object_id=None):
+        # Permiso
+        if not self.has_perm(request, self.permission_view):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+
+        queryset = self.get_queryset(request)
+
+        # --- DETALLE ---
+        if object_id:
+            try:
+                obj = queryset.get(id=object_id)
+            except StaffMember.DoesNotExist:
+                return JsonResponse({'error': 'Not found'}, status=404)
+
+            data = model_to_dict(obj, fields=self.detail_fields)
+            data['working_hours'] = []
+
+            return JsonResponse(data, safe=True)
+
+        # --- LISTA ---
+        data = [self.serialize_list_item(o) for o in queryset]
+
+        return JsonResponse({'results': data}, safe=False)
+
+
+
+    def post(self, request):
+        """Custom POST to create staff + user + working hours"""
+        if not self.has_perm(request, self.permission_create):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+
+        try:
+            payload = json.loads(request.body)
+        except:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        # 1) Create User
+        user_data = payload.get("user")
+        if not user_data:
+            return JsonResponse({"error": "Missing user data"}, status=400)
+
+        user = User.objects.create_user(
+            username=user_data["username"],
+            email=user_data.get("email", ""),
+            first_name=user_data.get("first_name", ""),
+            last_name=user_data.get("last_name", ""),
+            password=user_data.get("password", None)
+        )
+
+        # 2) Create StaffMember
+        staff = StaffMember.objects.create(
+            user=user,
+            slot_duration=payload.get("slot_duration", 30),
+            lead_time=payload.get("lead_time"),
+            finish_time=payload.get("finish_time"),
+            appointment_buffer_time=payload.get("appointment_buffer_time"),
+        )
+
+        # 3) Assign services
+        services = payload.get("services_offered", [])
+        if services:
+            staff.services_offered = services
+            staff.save()
+
+        # 4) Create WorkingHours
+        working_hours = payload.get("working_hours", [])
+        if working_hours:
+            for wh in working_hours:
+                WorkingHours.objects.create(
+                    staff_member=staff,
+                    day_of_week=wh["day_of_week"],
+                    start_time=wh["start_time"],
+                    end_time=wh["end_time"],
+                )
+            staff.set_timetable = True
+            staff.save()
+
+        # 5) Response
+        return JsonResponse({
+            "id": staff.id,
+            "user_id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "slot_duration": staff.slot_duration,
+            "services_offered": staff.get_services_offered(),
+            "has_timetable": staff.set_timetable,
+        }, status=201)
+
 
 from datetime import timedelta
 import isodate  # pip install isodate

@@ -101,7 +101,7 @@ export default function ServicesAdminPage() {
   return (
     <ProtectedAdmin>
       <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
-        {/* Header */}
+
         <div className="flex justify-between items-center border-b pb-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
@@ -119,16 +119,18 @@ export default function ServicesAdminPage() {
           </Button>
         </div>
 
-        {/* Services Grid */}
-        {isLoading ? (
-          <p className="text-gray-500 animate-pulse">Loading services...</p>
-        ) : error ? (
-          <p className="text-red-600 font-medium">{error.message}</p>
-        ) : services.length === 0 ? (
+      {
+        isLoading ? ( <p className="text-gray-500 animate-pulse">Loading services...</p>) 
+        
+        : error ? (<p className="text-red-600 font-medium">{error.message}</p> ) 
+        
+        : services.length === 0 ? (
           <div className="text-center text-gray-500 py-10">
             <p>No services found. Add your first service to get started.</p>
           </div>
-        ) : (
+        ) 
+        
+        : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
               <Card
@@ -208,9 +210,9 @@ export default function ServicesAdminPage() {
               </Card>
             ))}
           </div>
-        )}
+        )
+      }
 
-        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <Card className="w-full max-w-lg p-6 shadow-2xl border border-gray-200 rounded-2xl animate-in fade-in-50 bg-white">

@@ -16,7 +16,7 @@ urlpatterns = [
     path('session/', get_session, name='session'),
 
     # Staff Members
-    path('staffs/', staffs_list, name='staffs_list'),
+    path('staffs/', staff_member_view, name='staffs_list'),
     path('staffs/<int:object_id>/', staff_member_view, name='staff_detail'),  # BaseModelView
     path('staffs/create/', staff_member_view, name='staff_create'),  # POST
     path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),

@@ -23,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 import {
   Search,
   UserCog,
@@ -31,8 +33,9 @@ import {
   Eye,
   Edit,
   Trash2,
-  IdCard,
   Clock,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,15 +69,15 @@ export default function Staffs() {
       </p>
     );
 
-  const staffs = data?.staffs || [];
+  const staffs = data?.results || [];
+
   const filteredStaffs = staffs.filter((s: any) =>
-    `${s.first_name} ${s.last_name}`
+    `${s.user_first_name} ${s.user_last_name}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-    
+
   return (
-    
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -85,13 +88,12 @@ export default function Staffs() {
           </p>
         </div>
         <Button
-            className="bg-gradient-primary text-white hover:opacity-90"
-            onClick={() => setShowWizard(true)}
-            >
-            <UserCog className="mr-2 h-4 w-4" />
-            New Staff Member
+          className="bg-gradient-primary text-white hover:opacity-90"
+          onClick={() => setShowWizard(true)}
+        >
+          <UserCog className="mr-2 h-4 w-4" />
+          New Staff Member
         </Button>
-
       </div>
 
       {/* Search */}
@@ -133,44 +135,78 @@ export default function Staffs() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Username</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Slot Duration</TableHead>
                     <TableHead>Services Offered</TableHead>
+                    <TableHead>Timetable</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {filteredStaffs.map((staff: any) => (
                     <TableRow key={staff.id} className="hover:bg-muted/50">
-                      <TableCell>{staff.user_id}</TableCell>
-                      <TableCell>{staff.username}</TableCell>
+                      <TableCell>{staff.id}</TableCell>
+
+                      {/* Name */}
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                             <UserCog className="h-4 w-4 text-primary" />
                           </div>
                           <p className="font-medium">
-                            {staff.first_name} {staff.last_name}
+                            {staff.user_first_name} {staff.user_last_name}
                           </p>
                         </div>
                       </TableCell>
+
+                      {/* Email – backend aún no lo envía */}
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-3 w-3" />
-                          {staff.email}
+                          {staff.email || "—"}
                         </div>
                       </TableCell>
+
+                      {/* Slot Duration */}
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="h-3 w-3" />
                           {staff.slot_duration} min
                         </div>
                       </TableCell>
+
+                      {/* Services Offered */}
                       <TableCell>
-                        {staff.services_offered?.join(", ") || "—"}
+                        {staff.services_offered?.length > 0
+                          ? staff.services_offered.map((s: any) => s.name).join(", ")
+                          : "—"}
                       </TableCell>
+
+                      {/* Timetable Status */}
+                      <TableCell>
+                        {staff.set_timetable ? (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-sm">Configured</span>
+                          </div>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <div className="flex items-center gap-1 cursor-pointer text-yellow-600">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-sm">Missing</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs">
+                              This staff member needs to be assigned a timetable.
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+
+                      {/* Actions */}
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -197,23 +233,22 @@ export default function Staffs() {
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Wizard */}
       <Dialog open={showWizard} onOpenChange={setShowWizard}>
         <DialogContent className="max-w-lg">
-            <DialogHeader>
+          <DialogHeader>
             <DialogTitle>New Staff Member</DialogTitle>
-            </DialogHeader>
-            <StaffWizard onSuccess={() => setShowWizard(false)} />
+          </DialogHeader>
+          <StaffWizard onSuccess={() => setShowWizard(false)} />
         </DialogContent>
-    </Dialog>
-
+      </Dialog>
     </div>
-    
   );
-  
-  
 }
