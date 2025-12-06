@@ -204,59 +204,36 @@ from reportlab.lib import colors
 from django.http import HttpResponse
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from weasyprint import HTML
+from datetime import datetime
+import os
 
 @login_required
 def export_medical_history(request, patient_id):
-    try:
-        patient = Client.objects.get(id=patient_id)
-    except Client.DoesNotExist:
-        return HttpResponse("Patient not found.", status=404)
-
+    patient = get_object_or_404(Client, id=patient_id)
     record = getattr(patient, "medical_record", None)
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="medical_history_{patient_id}.pdf"'
+    logo_url = request.build_absolute_uri("/static/img/logo_clinic.png")
+     #Cnstruye la url absoluta de la imagen para poder encontrarla al generar el pdf.
+    doctor_signature_url = request.build_absolute_uri("/static/img/signature.png")
+    doctor_name = "Miquel Barón"
 
-    doc = SimpleDocTemplate(response, pagesize=A4)
-    styles = getSampleStyleSheet()
-    elements = []
+    html = render_to_string("reports/medical_report.html", {
+        "patient": patient,
+        "record": record,
+        "generated": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "logo_url": logo_url,
+        "doctor_signature_url": doctor_signature_url,
+        "doctor_name": doctor_name
+    }) # Sustituye las variables por los valores reales y genera el html completo.
 
-    elements.append(Paragraph("Medical History Report", styles['Title']))
-    elements.append(Spacer(1, 12))
-    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
-    elements.append(Spacer(1, 12))
+    pdf = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
 
-    # Datos del paciente
-    patient_data = [
-        ["Full Name", patient.get_full_name()],
-        ["Email", patient.email or "N/A"],
-        ["Phone", patient.phone_number or "N/A"],
-        ["Date of Birth", patient.date_of_birth.strftime("%d/%m/%Y") if patient.date_of_birth else "N/A"],
-        ["Gender", patient.get_gender_display() if patient.gender else "N/A"],
-        ["Address", patient.address or "N/A"],
-    ]
-    elements.append(Paragraph("Patient Information", styles['Heading2']))
-    table = Table(patient_data, hAlign='LEFT', colWidths=[120, 300])
-    table.setStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
-                    ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-                    ('GRID', (0,0), (-1,-1), 1, colors.black)])
-    elements.append(table)
-    elements.append(Spacer(1, 12))
-
-    # Historial médico
-    elements.append(Paragraph("Medical Record", styles['Heading2']))
-    record_data = [
-        ["Blood Type", record.blood_type or "N/A"] if record else ["Blood Type", "N/A"],
-        ["Allergies", record.allergies or "N/A"] if record else ["Allergies", "N/A"],
-        ["Medical Conditions", record.medical_conditions or "N/A"] if record else ["Medical Conditions", "N/A"],
-        ["Medications", record.medications or "N/A"] if record else ["Medications", "N/A"],
-        ["Notes", record.notes or "N/A"] if record else ["Notes", "N/A"],
-    ]
-    table2 = Table(record_data, hAlign='LEFT', colWidths=[120, 300])
-    table2.setStyle([('GRID', (0,0), (-1,-1), 1, colors.black)])
-    elements.append(table2)
-
-    doc.build(elements)
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f"attachment; filename=medical_history_{patient_id}.pdf"
     return response
 
 @login_required

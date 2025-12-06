@@ -272,9 +272,10 @@ export default function ServicesAdminPage() {
                     <Label>Duration (HH:MM)</Label>
                     <Input
                       name="duration"
-                      value={formData.duration || "00:30:00"}
+                      value={formData.duration || ""}
                       onChange={handleFormChange}
                       required
+                      placeholder="00:30"
                     />
                   </div>
 
