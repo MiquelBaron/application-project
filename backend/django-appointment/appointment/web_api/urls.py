@@ -30,17 +30,22 @@ urlpatterns = [
 
     # Staffs by service
     path('staffs-by-service/<int:service_id>/', get_staffs_by_service, name='staffs_by_service'),
+
+
     # Appointments
     path('appointments/', list_appointments, name='appointments_list'),  # GET & POST
     path('appointments/<int:appointment_id>/', appointment_detail, name='appointment_detail'),
+    path('appointments/<str:start_date>/<str:end_date>/', appointments_interval, name='appointments_interval'),
+    path('appointments/today/', appointments_today, name='appointments_today'),
+    path('appointments/recent/', appointments_recent, name='appointments_recent'),
 
     # Availability
     path('availability/<str:service_name>/<str:date_str>/', availability, name='availability'),
 
     # Clients
-    path('clients/',get_clients,name='clients_list'),
+    path('clients/',clients_post_get,name='clients_post_get'),
     path('clients/<int:client_id>/medical_records/',get_clients_medical_record,name='clients_list'),
-
+    path('clients/count/', clients_count, name='clients_count'),
     # Medical records
     path('medical_records/', MedicalRecordView.as_view(), name='medical_record_create'),
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_edit'),

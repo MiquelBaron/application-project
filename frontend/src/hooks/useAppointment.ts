@@ -4,19 +4,15 @@ export function useAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
- 
 
-  // Debugging seguro: log cuando appointments cambie
-  useEffect(() => {
-    console.log("appointments actualizados:", appointments);
-  }, [appointments]);
+  const baseUrl = "http://localhost:8001/v1/api/appointments/";
 
-  // Cargar citas desde el backend
+  // GET all appointments
   const fetchAppointments = useCallback(async () => {
     console.log("Called fetchAppointments");
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8001/v1/api/appointments/", {
+      const res = await fetch(baseUrl, {
         method: "GET",
         credentials: "include",
       });
@@ -29,35 +25,41 @@ export function useAppointments() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [baseUrl]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-const createAppointment = async (newAppointment: any, csrfToken: string) => {
-  const res = await fetch("http://localhost:8001/v1/api/appointments/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken,
-    },
-    credentials: "include",
-    body: JSON.stringify(newAppointment),
-  });
+  // Post
+  const createAppointment = async (newAppointment: any, csrfToken: string) => {
+    const res = await fetch(baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      credentials: "include",
+      body: JSON.stringify(newAppointment),
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Error creating appointment: ${res.status} ${text}`);
-  }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Error creating appointment: ${res.status} ${text}`);
+    }
 
-  const created = await res.json();
-  await fetchAppointments(); // opcional: refresca la lista de appointments
-  return created;
-};
+    const created = await res.json();
+    await fetchAppointments();
+    return created;
+  };
 
-  const updateAppointment = async (id: number, updatedData: any, csrfToken) => {
-    const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
+  // PUT
+  const updateAppointment = async (
+    id: number,
+    updatedData: any,
+    csrfToken: string
+  ) => {
+    const res = await fetch(`${baseUrl}${id}/`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -66,28 +68,62 @@ const createAppointment = async (newAppointment: any, csrfToken: string) => {
       credentials: "include",
       body: JSON.stringify(updatedData),
     });
+
     if (!res.ok) throw new Error("Error updating appointment");
     await fetchAppointments();
   };
 
-  const deleteAppointment = async (id: number,csrfToken) => {
-    const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
+  // DELETE
+  const deleteAppointment = async (id: number, csrfToken: string) => {
+    const res = await fetch(`${baseUrl}${id}/`, {
       method: "DELETE",
       headers: { "X-CSRFToken": csrfToken },
       credentials: "include",
     });
+
     if (!res.ok) throw new Error("Error deleting appointment");
     await fetchAppointments();
   };
 
+  // GET by id
   const getAppointmentInfo = async (id: number) => {
-    const res = await fetch(`http://localhost:8001/v1/api/appointments/${id}/`, {
+    const res = await fetch(`${baseUrl}${id}/`, {
       method: "GET",
       credentials: "include",
     });
+
     if (!res.ok) throw new Error("Error getting appointment info");
     return await res.json();
   };
+
+  const getTodayAppointments = async () =>{
+    const res = await fetch(`${baseUrl}today/`, {
+      method: "GET",
+      credentials: "include"
+    });
+    if (!res.ok) throw new Error("Error getting today's appointments");
+    return await res.json();
+  };
+
+  const getWeekAppointments = async() =>{
+    const {start, end} = getWeekRange()
+    const res = await fetch(`${baseUrl}${start}/${end}/`,{
+      method:"GET",
+      credentials:"include"
+    })
+    if (!res.ok) throw new Error("Error getting week's appointments.")
+    return res.json();
+  }
+
+  const getRecentAppointments = async() =>{
+    const res = await fetch(`${baseUrl}recent/`,{
+      method:"GET",
+      credentials:"include"
+    })
+    if (!res.ok) throw new Error("Error getting recent appointments")
+    const res2 = await res.json()
+    return res2.recent_appointments ?? ""
+  }
 
   return {
     appointments,
@@ -98,5 +134,22 @@ const createAppointment = async (newAppointment: any, csrfToken: string) => {
     updateAppointment,
     deleteAppointment,
     getAppointmentInfo,
+    getTodayAppointments,
+    getWeekAppointments,
+    getRecentAppointments
   };
+}
+
+function getWeekRange() {
+  const now = new Date();
+  const day = now.getDay(); // 0 = domingo, 1 = lunes, ...
+  
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((day + 6) % 7)); // lunes
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6); // domingo
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0]; // YYYY-MM-DD
+  return { start: formatDate(monday), end: formatDate(sunday) };
 }

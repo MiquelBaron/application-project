@@ -53,11 +53,13 @@ def create_service(request):
 
 @login_required
 @permission_required('appointment.view_client', raise_exception=True)
-def get_clients(request):
+def clients_post_get(request):
     if request.method == 'GET':
         clients = Client.objects.all().values('id', 'first_name', 'last_name', 'phone_number','email')
         client_list = [{**c, 'phone_number': str(c['phone_number'])} for c in clients]
         return JsonResponse({'clients': client_list})
+    if request.method == 'POST':
+        pass
 
 @login_required
 def get_clients_medical_record(request, client_id:int):

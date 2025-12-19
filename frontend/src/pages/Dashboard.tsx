@@ -21,127 +21,101 @@ import { useNavigate } from "react-router-dom";
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth"
+import { useAppointments } from "@/hooks/useAppointment";
+import { useClients } from "@/hooks/useClients";
 
-// Mock data - in real app, this would come from your Django API
-const stats = [
-  {
-    title: "Today's Appointments",
-    value: "12",
-    change: "+2.5%",
-    icon: Calendar,
-    color: "text-primary",
-  },
-  {
-    title: "This Week",
-    value: "48",
-    change: "+12%",
-    icon: CalendarDays,
-    color: "text-success",
-  },
-  {
-    title: "Active Customers",
-    value: "234",
-    change: "+5.2%",
-    icon: Users,
-    color: "text-info",
-  },
-  {
-    title: "Pending Appointments",
-    value: "8",
-    change: "-1.2%",
-    icon: Clock,
-    color: "text-warning",
-  },
-];
-
-const recentAppointments = [
-  {
-    id: 1,
-    customer: "John Doe",
-    service: "Consultation",
-    time: "10:00 AM",
-    status: "confirmed",
-    duration: "30 min",
-  },
-  {
-    id: 2,
-    customer: "Jane Smith",
-    service: "Follow-up",
-    time: "11:30 AM",
-    status: "pending",
-    duration: "15 min",
-  },
-  {
-    id: 3,
-    customer: "Mike Johnson",
-    service: "Initial Assessment",
-    time: "2:00 PM",
-    status: "confirmed",
-    duration: "45 min",
-  },
-  {
-    id: 4,
-    customer: "Sarah Wilson",
-    service: "Consultation",
-    time: "3:30 PM",
-    status: "cancelled",
-    duration: "30 min",
-  },
-  {
-    id: 5,
-    customer: "David Brown",
-    service: "Treatment",
-    time: "4:15 PM",
-    status: "completed",
-    duration: "60 min",
-  },
-];
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "confirmed":
-      return <CheckCircle className="h-4 w-4 text-success" />;
-    case "pending":
-      return <Clock className="h-4 w-4 text-warning" />;
-    case "cancelled":
-      return <XCircle className="h-4 w-4 text-destructive" />;
-    case "completed":
-      return <AlertCircle className="h-4 w-4 text-info" />;
-    default:
-      return <Clock className="h-4 w-4 text-muted-foreground" />;
-  }
-};
-
-const getStatusBadge = (status: string) => {
-  const variants = {
-    confirmed: "bg-success-light text-success border-success",
-    pending: "bg-warning-light text-warning border-warning",
-    cancelled: "bg-destructive-light text-destructive border-destructive",
-    completed: "bg-info-light text-info border-info",
-  };
-
-  return (
-    <Badge variant="outline" className={variants[status as keyof typeof variants]}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </Badge>
-  );
-};
+ interface Appointment {
+  id: number;
+  customer: string;
+  service: string;
+  date: string; // ISO string
+  duration: number; // minutos
+  start_time: string; 
+  staff: string;
+}
 
 export default function Dashboard() {
+  // Hooks
+  const { csrfToken } = useAuth();
+  const { getTodayAppointments, getWeekAppointments, getRecentAppointments } = useAppointments();
+  const { clientsCount } = useClients(csrfToken);
+
+  // useState
+  const [apptToday, setTodaysAppointments] = useState<number>(0);
+  const [apptWeek, setWeekAppts] = useState<number>(0);
+  const [customersCount, setCustomersCount] = useState<number>(0);
+  const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
 
   const { user, isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate(); // <-- Reemplaza router
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      console.log("User not authenticated")
-      navigate("/login"); // <-- Reemplaza router.push
+      navigate("/login");
     }
   }, [loading, isAuthenticated, navigate]);
 
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getTodayAppointments();      
+        const week = await getWeekAppointments();      
+        const customers = await clientsCount();         
+        const recentAppt = await getRecentAppointments();
+
+        setTodaysAppointments(data.appointments_today);
+        setWeekAppts(week.week_appointments);
+        setCustomersCount(customers);
+        setRecentAppointments(recentAppt)
+      } catch (err) {
+        console.error(err);
+        setTodaysAppointments(0);
+        setWeekAppts(0);
+        setCustomersCount(0);
+      }
+    }
+
+    load();
+  }, []);
+
   if (loading) return <p>Loading...</p>;
   if (!isAuthenticated) return null;
+
+  const stats = [
+    {
+      title: "Today's Appointments",
+      value: apptToday,
+      icon: Calendar,
+      color: "bg-primary text-white",
+    },
+    {
+      title: "This Week",
+      value: apptWeek,
+      icon: CalendarDays,
+      color: "bg-success text-white",
+    },
+    {
+      title: "Active Customers",
+      value: customersCount,
+      icon: Users,
+      color: "bg-info text-white",
+    },
+  ];
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, string> = {
+      confirmed: "bg-green-100 text-green-800",
+      pending: "bg-yellow-100 text-yellow-800",
+      cancelled: "bg-red-100 text-red-800",
+      completed: "bg-blue-100 text-blue-800",
+    };
+    return (
+      <span className={`px-2 py-1 text-xs font-semibold rounded ${variants[status] || "bg-gray-100 text-gray-800"}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -154,96 +128,90 @@ export default function Dashboard() {
           </p>
         </div>
         <Button
-          className="bg-gradient-primary text-white hover:opacity-90"
+          className=" text-white hover:scale-105 transition-transform flex items-center gap-2"
           onClick={() => setWizardOpen(true)}
         >
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <PlusCircle className="h-5 w-5" />
           New Appointment
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
-          <Card key={stat.title} className="shadow-medium">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <TrendingUp className="mr-1 h-3 w-3" />
-                {stat.change} from last week
-              </div>
-            </CardContent>
+          <Card key={stat.title} className="flex items-center p-4 shadow-lg hover:shadow-xl transition-shadow rounded-xl">
+            <div className={`p-3 rounded-full ${stat.color} mr-4 flex items-center justify-center`}>
+              <stat.icon className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <p className="text-2xl font-bold">{stat.value}</p>
+            </div>
           </Card>
         ))}
       </div>
 
       {/* Recent Appointments */}
-      <Card className="shadow-medium">
+      <Card className="shadow-lg rounded-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Recent Appointments</CardTitle>
-              <CardDescription>
-                Your latest appointment bookings and their current status
-              </CardDescription>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={()=>{navigate("/calendar?view=agenda")}}>
               View All
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {recentAppointments.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="flex items-center justify-between rounded-lg border p-4 shadow-soft transition-shadow hover:shadow-medium"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center">
-                    {getStatusIcon(appointment.status)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {appointment.customer}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment.service} • {appointment.duration}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{appointment.time}</p>
-                    {getStatusBadge(appointment.status)}
-                  </div>
-                </div>
-              </div>
-            ))}
+  <div className="space-y-4">
+    {recentAppointments.map((appt) => (
+      <div
+        key={appt.id}
+        className="flex justify-between items-center p-4 rounded-xl border border-gray-200 bg-white hover:shadow-lg transition-shadow"
+      >
+        {/* Información principal */}
+        <div className="flex flex-col space-y-1">
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-muted-foreground">Customer:</span>
+            <span className="font-medium text-foreground">{appt.customer}</span>
           </div>
-        </CardContent>
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-muted-foreground">Staff:</span>
+            <span className="font-medium text-foreground">{appt.staff}</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {appt.service} • {appt.duration} 
+          </p>
+        </div>
+
+        {/* Fecha y estado */}
+        <div className="flex flex-col items-end space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {appt.date} - {appt.start_time}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+</CardContent>
+
       </Card>
+
+      {/* Appointment Wizard Dialog */}
       <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Book a New Appointment</DialogTitle>
           </DialogHeader>
-
           <AppointmentWizard
             onComplete={() => {
-                toast({ title: "Appointment booked successfully!" });
+              toast({ title: "Appointment booked successfully!" });
               setWizardOpen(false);
             }}
           />
         </DialogContent>
       </Dialog>
-
     </div>
-    
-    
   );
 }

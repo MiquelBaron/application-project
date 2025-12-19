@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.forms import model_to_dict
 
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.utils.dateparse import parse_date
 
 from appointment.core.db_helpers import get_staffs_assigned_to_service
 from appointment.models import Appointment, StaffMember, Service, Client
@@ -282,3 +283,107 @@ def get_session(request):
         "is_superuser": user.is_superuser,
         "staff_info": getattr(user, "staff_info", None),
     })
+
+
+@login_required
+def appointments_interval(request, start_date, end_date):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Invalid method")
+
+    start_date_str = start_date
+    end_date_str = end_date
+
+    if not start_date_str or not end_date_str:
+        return HttpResponseBadRequest("start_date and end_date are required")
+
+    start_date = parse_date(start_date_str)
+    end_date = parse_date(end_date_str)
+
+    if not start_date or not end_date:
+        return HttpResponseBadRequest("Invalid date format (YYYY-MM-DD)")
+
+    appointments_count = (
+        Appointment.objects
+        .filter(date__range=(start_date, end_date))
+        .select_related("client", "staff_member", "service")
+        .order_by("date", "start_time")
+    ).count()
+
+
+
+    return JsonResponse({"week_appointments": appointments_count})
+from django.utils.timezone import localdate
+
+@login_required
+def appointments_today(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Invalid method")
+
+    today = localdate()
+
+    count = Appointment.objects.filter(date=today).count()
+
+    return JsonResponse({"appointments_today": count})
+
+
+@login_required
+def clients_count(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Invalid method")
+
+    clients_counter = Client.objects.count()
+    print(clients_counter)
+    return JsonResponse({"count": clients_counter})
+
+
+from django.utils.timezone import now
+
+@login_required
+def appointments_recent(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Invalid method")
+
+    # Obtener la fecha/hora actual
+    current_time = now()
+
+    # Filtrar solo appointments que sean en el futuro o ahora, ordenar por fecha ascendente y tomar los 5 primeros
+    upcoming_appointments = (
+        Appointment.objects
+        .filter(date__gte=current_time)
+        .order_by('date')[:5]
+    )
+
+    # Serializar los datos en un formato simple
+    data = []
+    for appt in upcoming_appointments:
+        data.append({
+            "id": appt.id,
+            "customer": appt.client.first_name if hasattr(appt.client, 'first_name') else str(appt.client),
+            "service": appt.service.name,
+            "date": str(appt.date.isoformat()),
+            "duration": appt.service.get_duration_readable(),
+            "start_time": str(appt.start_time),
+            "staff": appt.staff_member.user.first_name + appt.staff_member.user.last_name,
+        })
+
+    return JsonResponse({"recent_appointments": data})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

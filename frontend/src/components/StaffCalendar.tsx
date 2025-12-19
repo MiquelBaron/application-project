@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, dayjsLocalizer, Views } from "react-big-calendar";
+import { Calendar, dayjsLocalizer, Views, View } from "react-big-calendar";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -15,11 +15,12 @@ interface Appointment {
 
 interface StaffCalendarProps {
   appointments: Appointment[];
+  initialView?: View;
 }
 
 const localizer = dayjsLocalizer(dayjs);
 
-export function StaffCalendar({ appointments }: StaffCalendarProps) {
+export function StaffCalendar({ appointments, initialView = Views.MONTH }: StaffCalendarProps) {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   const events = appointments
@@ -62,6 +63,8 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
     </div>
   );
 
+  const [view, setView] = useState<View>(initialView);
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-md h-[700px] relative">
       <Calendar
@@ -72,7 +75,9 @@ export function StaffCalendar({ appointments }: StaffCalendarProps) {
         titleAccessor="title"
         eventPropGetter={eventStyleGetter}
         components={{ event: EventComponent }}
-        defaultView={Views.MONTH}
+        defaultView={initialView}  // vista inicial
+        view={view}                // vista controlada
+        onView={(v) => setView(v)} // manejar cambios de vista por el usuario
         views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
         onSelectEvent={(event) => setSelectedEvent(event)}
       />

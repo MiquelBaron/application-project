@@ -41,8 +41,7 @@ export default function AppointmentWizard({ onComplete }: AppointmentWizardProps
   // -----------------------------
   const { csrfToken } = useAuth();
 
-  const { data, isLoading: loadingClients } = useClients(csrfToken);
-  const clients = data?.clients;
+  const { clients,loading } = useClients(csrfToken);
 
   const { services, isLoading: loadingServices } = useServices(csrfToken);
   const { staffs, loading: loadingStaffs } = useStaffsByService(serviceId);
@@ -91,8 +90,8 @@ export default function AppointmentWizard({ onComplete }: AppointmentWizardProps
         {/* STEP 1 - Client */}
         <FormWizard.TabContent title="Client" icon="ti-user">
           <h3 className="text-lg font-bold mb-3">Select a Client</h3>
-          {loadingClients && <p>Loading clients...</p>}
-          {!loadingClients && clients && (
+          {loading && <p>Loading clients...</p>}
+          {!loading && clients && (
             <select
                           title="-"
 
