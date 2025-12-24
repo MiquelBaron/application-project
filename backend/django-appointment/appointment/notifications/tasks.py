@@ -37,6 +37,7 @@ def send_appointment_notification(appointment_id):
             "date": str(appointment.date),
             "start_time": str(appointment.start_time),
             "staff": staff_user.get_full_name(),
+            "duration": appointment.service.get_duration_readable(),
         }
 
         notifications_to_create = []

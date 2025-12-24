@@ -4,6 +4,7 @@ from django.forms import model_to_dict
 
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.utils.dateparse import parse_date
+from django.views.decorators.csrf import csrf_exempt
 
 from appointment.core.db_helpers import get_staffs_assigned_to_service
 from appointment.models import Appointment, StaffMember, Service, Client
@@ -368,17 +369,74 @@ def appointments_recent(request):
 
     return JsonResponse({"recent_appointments": data})
 
+@csrf_exempt
+def client_by_id(request,client_id):
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        return JsonResponse({"error": "Client not found"}, status=404)
 
+    if request.method == "GET":
 
+        data = {
+            "id": client.id,
+            "gender": client.gender,
+            "address": client.address,
+            "date_of_birth": client.date_of_birth,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "email": client.email,
+            "phone_number": str(client.phone_number),
+            "extra_info": client.extra_info,
+            "created_at": client.created_at.isoformat(),
+            "updated_at": client.updated_at.isoformat(),
+        }
+        return JsonResponse({"client": data})
 
+    if request.method == "PUT":
+        try:
+            body = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
 
+            # Update fields if present in request
+        client.first_name = body.get("first_name", client.first_name)
+        client.last_name = body.get("last_name", client.last_name)
+        client.email = body.get("email", client.email)
+        client.phone_number = body.get("phone_number", client.phone_number)
+        client.address = body.get("address", client.address)
+        client.gender = body.get("gender", client.gender)
+        date_of_birth = body.get("date_of_birth", client.date_of_birth)
+        if isinstance(date_of_birth, str):
+            try:
+                date_of_birth = datetime.strptime(date_of_birth, "%Y-%m-%d").date()
+            except ValueError:
+                date_of_birth = None
+        client.date_of_birth = date_of_birth
+        client.extra_info = body.get("extra_info", client.extra_info)
+        client.source = body.get("source", client.source)
 
+        client.save()
 
+        # Return updated client
+        data = {
+            "id": client.id,
+            "gender": client.gender,
+            "address": client.address,
+            "date_of_birth": client.date_of_birth,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "email": client.email,
+            "phone_number": str(client.phone_number),
+            "extra_info": client.extra_info,
+            "source": client.source,
+            "created_at": client.created_at.isoformat(),
+            "updated_at": client.updated_at.isoformat(),
+        }
+        return JsonResponse({"client": data})
 
-
-
-
-
+    else:
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
 

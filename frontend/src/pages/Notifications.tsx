@@ -75,28 +75,38 @@ export default function NotificationPage() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-600">Client:</span>
+                      <span className="text-black">Client:</span>
                       <p className="font-medium">{notification.client}</p>
                     </div>
+
                     <div>
-                      <span className="text-gray-600">Service:</span>
+                      <span className="text-black">Service:</span>
                       <p>{notification.service}</p>
                     </div>
+
                     <div>
-                      <span className="text-gray-600">Date:</span>
+                      <span className="text-black">Date:</span>
                       <p>{formatDate(notification.date)}</p>
                     </div>
+
                     <div>
-                      <span className="text-gray-600">Time:</span>
+                      <span className="text-black">Time:</span>
                       <p>{notification.start_time}</p>
                     </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-600">Staff member:</span>
+
+                    <div>
+                      <span className="text-black">Duration:</span>
+                      <p>{notification.duration}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-black">Staff member:</span>
                       <p>{notification.staff}</p>
                     </div>
                   </div>
+
                 </div>
               ))
             )}

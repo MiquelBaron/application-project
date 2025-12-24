@@ -1,5 +1,6 @@
 
 from django.contrib.auth.decorators import permission_required, login_required
+from django.db import IntegrityError
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, Http404, HttpResponseNotAllowed
 from guardian.backends import ObjectPermissionBackend
@@ -54,12 +55,49 @@ def create_service(request):
 @login_required
 @permission_required('appointment.view_client', raise_exception=True)
 def clients_post_get(request):
+
     if request.method == 'GET':
         clients = Client.objects.all().values('id', 'first_name', 'last_name', 'phone_number','email')
         client_list = [{**c, 'phone_number': str(c['phone_number'])} for c in clients]
         return JsonResponse({'clients': client_list})
+
     if request.method == 'POST':
-        pass
+        try:
+            data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            _logger.error("Invalid request body")
+            return HttpResponseBadRequest("Error parsing request body")
+
+        try:
+            client = Client.objects.create(
+                source=data.get("source", "other"),
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                phone_number=data["phone_number"],
+                email=data["email"],
+                extra_info=data.get("extra_info", ""),
+                date_of_birth=data.get("date_of_birth") or None,
+                gender=data.get("gender"),
+                address=data.get("address"),
+            )
+        except KeyError as e:
+            _logger.error(e)
+            return HttpResponseBadRequest("There is an error with the client data")
+        except IntegrityError:
+            return HttpResponseBadRequest("Phone number already exists")
+
+        except ValueError as e:
+            return HttpResponseBadRequest(str(e))
+
+        return JsonResponse(
+            {
+                "id": client.id,
+                "client": str(client),
+                "created": True,
+            },
+            status=201
+        )
+
 
 @login_required
 def get_clients_medical_record(request, client_id:int):

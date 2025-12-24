@@ -43,9 +43,11 @@ urlpatterns = [
     path('availability/<str:service_name>/<str:date_str>/', availability, name='availability'),
 
     # Clients
-    path('clients/',clients_post_get,name='clients_post_get'),
-    path('clients/<int:client_id>/medical_records/',get_clients_medical_record,name='clients_list'),
     path('clients/count/', clients_count, name='clients_count'),
+    path('clients/<int:client_id>/medical_records/', get_clients_medical_record, name='clients_medical_records'),
+    path('clients/<int:client_id>/', client_by_id, name='clients_by_id'),
+    path('clients/', clients_post_get, name='clients_post_get'),
+
     # Medical records
     path('medical_records/', MedicalRecordView.as_view(), name='medical_record_create'),
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_edit'),
