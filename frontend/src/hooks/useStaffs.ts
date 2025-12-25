@@ -1,44 +1,83 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { NewStaffPayload, Staff } from "@/types/staff";
+
+
+
 
 export function useStaffs(csrfToken?: string) {
-  const [data, setData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [staffs, setStaffs] = useState<Staff[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const baseUrl = "http://localhost:8001/v1/api/staffs/"
+  /* ------------------ FETCH STAFFS ------------------ */
+  const fetchStaffs = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-  useEffect(() => {
+    try {
+      const res = await fetch(baseUrl, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    const fetchStaffs = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const res = await fetch(`http://localhost:8001/v1/api/staffs/`, {
-          method: "GET",
-          credentials: "include", 
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch staffs: ${res.statusText}`);
-        }
-
-        const json = await res.json();
-        setData(json);
-      } catch (err: any) {
-        setError(err);
-      } finally {
-        setIsLoading(false);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch staffs (${res.status})`);
       }
-    };
 
-    const editStaff = async () =>{
-      
+      const json = await res.json();
+      const data = json.results
+      setStaffs(data);
+    } catch (err: any) {
+      setError(err.message ?? "Unknown error");
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
+  /* ------------------ CREATE STAFF ------------------ */
+  const createStaff = async (payload: NewStaffPayload) => {
+    setError(null);
+    console.log(payload)
+    try {
+      const res = await fetch(baseUrl, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to create staff");
+      }
+
+      // refresh list after create
+      await fetchStaffs();
+      return json;
+    } catch (err: any) {
+      setError(err.message ?? "Unknown error");
+      throw err;
+    }
+  };
+
+  /* ------------------ EFFECT ------------------ */
+  useEffect(() => {
     fetchStaffs();
-  }, [csrfToken]);
+  }, [fetchStaffs]);
 
-  return { data, isLoading, error };
+  return {
+    staffs,
+    isLoading,
+    error,
+    refetch: fetchStaffs,
+    createStaff,
+  };
 }
+

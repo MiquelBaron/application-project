@@ -43,35 +43,43 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useServices } from "@/hooks/useServices";
 
 export default function Staffs() {
   const { csrfToken, isAuthenticated } = useAuth();
-  const { data, error, isLoading } = useStaffs(csrfToken);
+  
+  const {staffs,isLoading, error,createStaff,} = useStaffs(csrfToken);
+  const {services} = useServices()
   const [searchTerm, setSearchTerm] = useState("");
   const [showWizard, setShowWizard] = useState(false);
 
-  if (!isAuthenticated)
+  /* ------------------ GUARDS ------------------ */
+  if (!isAuthenticated) {
     return (
       <p className="text-center text-red-500">
         Please login to see staff members.
       </p>
     );
-  if (isLoading)
+  }
+
+  if (isLoading) {
     return (
       <p className="text-center text-muted-foreground">
         Loading staff members...
       </p>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <p className="text-center text-red-500">
-        Error loading staff: {error.message}
+        Error loading staff: {error}
       </p>
     );
+  }
 
-  const staffs = data?.results || [];
-
-  const filteredStaffs = staffs.filter((s: any) =>
+  /* ------------------ FILTER ------------------ */
+  const filteredStaffs = staffs.filter((s) =>
     `${s.user_first_name} ${s.user_last_name}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
@@ -79,6 +87,7 @@ export default function Staffs() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -87,6 +96,7 @@ export default function Staffs() {
             Manage and view all staff in the organization
           </p>
         </div>
+
         <Button
           className="bg-gradient-primary text-white hover:opacity-90"
           onClick={() => setShowWizard(true)}
@@ -100,7 +110,7 @@ export default function Staffs() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Search Staff</CardTitle>
-          <CardDescription>Search by name or username</CardDescription>
+          <CardDescription>Search by name</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
@@ -124,6 +134,7 @@ export default function Staffs() {
             {filteredStaffs.length !== 1 ? "s" : ""} found
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {filteredStaffs.length === 0 ? (
             <p className="text-center text-muted-foreground">
@@ -145,31 +156,21 @@ export default function Staffs() {
                 </TableHeader>
 
                 <TableBody>
-                  {filteredStaffs.map((staff: any) => (
-                    <TableRow key={staff.id} className="hover:bg-muted/50">
+                  {filteredStaffs.map((staff) => (
+                    <TableRow key={staff.id}>
                       <TableCell>{staff.id}</TableCell>
 
-                      {/* Name */}
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <UserCog className="h-4 w-4 text-primary" />
-                          </div>
-                          <p className="font-medium">
-                            {staff.user_first_name} {staff.user_last_name}
-                          </p>
-                        </div>
+                      <TableCell className="font-medium">
+                        {staff.user_first_name} {staff.user_last_name}
                       </TableCell>
 
-                      {/* Email – backend aún no lo envía */}
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-3 w-3" />
-                          {staff.email || "—"}
+                          {staff.user_email}
                         </div>
                       </TableCell>
 
-                      {/* Slot Duration */}
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="h-3 w-3" />
@@ -177,36 +178,33 @@ export default function Staffs() {
                         </div>
                       </TableCell>
 
-                      {/* Services Offered */}
                       <TableCell>
-                        {staff.services_offered?.length > 0
-                          ? staff.services_offered.map((s: any) => s.name).join(", ")
+                        {staff.services_offered?.length
+                          ? staff.services_offered.map((s) => s.name).join(", ")
                           : "—"}
                       </TableCell>
 
-                      {/* Timetable Status */}
                       <TableCell>
                         {staff.set_timetable ? (
                           <div className="flex items-center gap-1 text-green-600">
                             <CheckCircle className="h-4 w-4" />
-                            <span className="text-sm">Configured</span>
+                            Configured
                           </div>
                         ) : (
                           <Tooltip>
                             <TooltipTrigger>
-                              <div className="flex items-center gap-1 cursor-pointer text-yellow-600">
+                              <div className="flex items-center gap-1 text-yellow-600 cursor-pointer">
                                 <AlertTriangle className="h-4 w-4" />
-                                <span className="text-sm">Missing</span>
+                                Missing
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="max-w-xs">
-                              This staff member needs to be assigned a timetable.
+                            <TooltipContent>
+                              Timetable not configured yet
                             </TooltipContent>
                           </Tooltip>
                         )}
                       </TableCell>
 
-                      {/* Actions */}
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -216,16 +214,13 @@ export default function Staffs() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
+                              <Eye className="mr-2 h-4 w-4" /> View
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -233,7 +228,6 @@ export default function Staffs() {
                     </TableRow>
                   ))}
                 </TableBody>
-
               </Table>
             </div>
           )}
@@ -246,7 +240,12 @@ export default function Staffs() {
           <DialogHeader>
             <DialogTitle>New Staff Member</DialogTitle>
           </DialogHeader>
-          <StaffWizard onSuccess={() => setShowWizard(false)} />
+
+          <StaffWizard
+            onCreate={createStaff}
+            onSuccess={() => setShowWizard(false)}
+            availableServices={services}
+          />
         </DialogContent>
       </Dialog>
     </div>

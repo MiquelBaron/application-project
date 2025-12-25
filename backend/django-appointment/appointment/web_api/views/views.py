@@ -1,5 +1,6 @@
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.forms import model_to_dict
 
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
@@ -11,10 +12,10 @@ from appointment.models import Appointment, StaffMember, Service, Client
 from appointment.core.api_helpers import create_appointment_safe, get_availability_for_service_across_staffs
 from datetime import datetime
 #Login
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse, HttpResponseBadRequest
 import json
 
@@ -439,7 +440,131 @@ def client_by_id(request,client_id):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
+from appointment.models import User
+import traceback
+from django.conf import settings
+import logging
 
+logger = logging.getLogger(__name__)
+@login_required
+@permission_required("appointment.add_user")
+def new_staff(request):
+    print("Received staff request")
+    if request.method == "GET":
+        print("GET REQUEST")
+        try:
+            logger.info("Fetching all staff members")
+
+            staffs = StaffMember.objects.all().select_related('user').prefetch_related('services_offered')
+
+            results = []
+            for staff in staffs:
+                staff_data = {
+                    "id": staff.id,
+                    "user_id": staff.user.id,
+                    "user_username": staff.user.username,
+                    "user_email": staff.user.email,
+                    "user_first_name": staff.user.first_name,
+                    "user_last_name": staff.user.last_name,
+                    "services_offered": [{"id": s.id, "name": s.name} for s in staff.services_offered.all()],
+                    "slot_duration": staff.slot_duration,
+                    "lead_time": staff.lead_time.isoformat() if staff.lead_time else None,
+                    "finish_time": staff.finish_time.isoformat() if staff.finish_time else None,
+                    "work_on_saturday": staff.work_on_saturday,
+                    "work_on_sunday": staff.work_on_sunday,
+                    "set_timetable": staff.set_timetable,
+                    "created_at": staff.created_at.isoformat(),
+                }
+                results.append(staff_data)
+                logger.debug(f"Staff fetched: {staff_data['user_username']} (ID: {staff_data['id']})")
+
+            return JsonResponse({"results": results}, status=200)
+
+        except Exception as e:
+            logger.exception("Error fetching staff members")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    if request.method == "POST":
+        print("POST")
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            print("Invalid JSON received:", request.body)
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+        print("Received data for new staff (password hidden):", {k: v for k, v in data.items() if k != "password"})
+
+        # ------------------ REQUIRED FIELDS ------------------
+        required_user_fields = ["username", "email", "password"]
+        missing_fields = [f for f in required_user_fields if f not in data]
+        if missing_fields:
+            print("Missing required fields:", missing_fields)
+            return JsonResponse({"error": f"Missing required fields: {', '.join(missing_fields)}"}, status=400)
+
+        try:
+            with transaction.atomic():
+                # ------------------ CREATE USER ------------------
+                print("Creating user...")
+                user = User.objects.create_user(
+                    username=data["username"],
+                    email=data["email"],
+                    password=data["password"],
+                    first_name=data.get("first_name", ""),
+                    last_name=data.get("last_name", ""),
+                )
+
+                user.groups.add(Group.objects.get(name="Staff"))
+                print(f"User created successfully: id={user.id}, username={user.username}")
+
+                # ------------------ CREATE STAFF ------------------
+                print("Creating staff member...")
+                staff = StaffMember.objects.create(
+                    user=user,
+                    slot_duration=data.get("slot_duration", 30),
+                    lead_time=data.get("lead_time"),
+                    finish_time=data.get("finish_time"),
+                    appointment_buffer_time=data.get("appointment_buffer_time"),
+                    work_on_saturday=data.get("work_on_saturday", False),
+                    work_on_sunday=data.get("work_on_sunday", False),
+                    set_timetable=data.get("set_timetable", False),
+                )
+                print(f"Staff member created successfully: id={staff.id}")
+
+                # ------------------ ASSIGN SERVICES ------------------
+                services_ids = data.get("services_offered", [])
+                if services_ids:
+                    print(f"Assigning services: {services_ids}")
+                    if not all(isinstance(sid, int) for sid in services_ids):
+                        print("Error: services_offered must be a list of integers")
+                        return JsonResponse({"error": "services_offered must be a list of integers"}, status=400)
+
+                    services = Service.objects.filter(id__in=services_ids)
+                    staff.services_offered.set(services)
+                    staff.save()
+                    print(f"Assigned {services.count()} services to staff id={staff.id}")
+
+                return JsonResponse(
+                    {
+                        "message": "Staff member created successfully",
+                        "staff_id": staff.id,
+                        "user_id": user.id,
+                    },
+                    status=201
+                )
+
+        except Exception as e:
+            print("Error creating staff:", str(e))
+            if settings.DEBUG:
+                traceback.print_exc()
+            return JsonResponse(
+                {"error": str(e)},
+                status=500
+            )
+    if request.method != "POST":
+        print("NO POST")
+    else:
+        print("MAL")
+        return HttpResponseBadRequest(status=400)
 
 
 
