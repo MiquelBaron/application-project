@@ -17,7 +17,7 @@ urlpatterns = [
 
     # Staff Members
     path('staffs/', new_staff, name='staffs_list'),
-    path('staffs/<int:object_id>/', staff_member_view, name='staff_detail'),  # BaseModelView
+    path('staffs/<int:object_id>/', get_staff_detail, name='staff_detail'),  # BaseModelView
     path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),
 
     # Services
@@ -29,7 +29,6 @@ urlpatterns = [
 
     # Staffs by service
     path('staffs-by-service/<int:service_id>/', get_staffs_by_service, name='staffs_by_service'),
-
 
     # Appointments
     path('appointments/', list_appointments, name='appointments_list'),  # GET & POST
@@ -46,6 +45,9 @@ urlpatterns = [
     path('clients/<int:client_id>/medical_records/', get_clients_medical_record, name='clients_medical_records'),
     path('clients/<int:client_id>/', client_by_id, name='clients_by_id'),
     path('clients/', clients_post_get, name='clients_post_get'),
+
+    # Working hours
+    path('working_hours/staff/<int:staff_id>/', set_working_hours, name='working_hours_list'),
 
     # Medical records
     path('medical_records/', MedicalRecordView.as_view(), name='medical_record_create'),

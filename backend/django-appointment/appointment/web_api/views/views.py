@@ -1,14 +1,13 @@
-
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import model_to_dict
 
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseServerError
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 
 from appointment.core.db_helpers import get_staffs_assigned_to_service
-from appointment.models import Appointment, StaffMember, Service, Client
+from appointment.models import Appointment, StaffMember, Service, Client, WorkingHours
 from appointment.core.api_helpers import create_appointment_safe, get_availability_for_service_across_staffs
 from datetime import datetime
 #Login
@@ -451,14 +450,13 @@ logger = logging.getLogger(__name__)
 def new_staff(request):
     print("Received staff request")
     if request.method == "GET":
-        print("GET REQUEST")
         try:
             logger.info("Fetching all staff members")
 
             staffs = StaffMember.objects.all().select_related('user').prefetch_related('services_offered')
-
             results = []
             for staff in staffs:
+                set_timetable = WorkingHours.objects.filter(staff_member=staff).exists()
                 staff_data = {
                     "id": staff.id,
                     "user_id": staff.user.id,
@@ -472,7 +470,7 @@ def new_staff(request):
                     "finish_time": staff.finish_time.isoformat() if staff.finish_time else None,
                     "work_on_saturday": staff.work_on_saturday,
                     "work_on_sunday": staff.work_on_sunday,
-                    "set_timetable": staff.set_timetable,
+                    "set_timetable": set_timetable,
                     "created_at": staff.created_at.isoformat(),
                 }
                 results.append(staff_data)
@@ -565,6 +563,84 @@ def new_staff(request):
     else:
         print("MAL")
         return HttpResponseBadRequest(status=400)
+
+
+
+
+@login_required
+def set_working_hours(request, staff_id):
+    staff_member = StaffMember.objects.get(id=staff_id)
+    print(staff_member)
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            # Opcional: borrar horarios anteriores
+            WorkingHours.objects.filter(staff_member=staff_member).delete()
+
+            working_hours = []
+            for item in data:
+                working_hours.append(
+                    WorkingHours(
+                        staff_member=staff_member,
+                        day_of_week=item["day"],
+                        start_time=item["start_time"],
+                        end_time=item["end_time"],
+                    )
+                )
+
+            WorkingHours.objects.bulk_create(working_hours)
+
+            return JsonResponse({"status": "success"}, status=201)
+
+        except StaffMember.DoesNotExist:
+            logger.error(f"Staff member with id {staff_id} does not exist")
+            return HttpResponseBadRequest("Staff member does not exist")
+
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            logger.exception("Invalid payload")
+            return HttpResponseBadRequest("Invalid data")
+
+        except Exception as e:
+            logger.exception("Error setting working hours")
+            return HttpResponseServerError("Internal server error")
+    elif request.method == "GET":
+        print("GET")
+        working_hours = WorkingHours.objects.filter(staff_member=staff_member)
+
+        result = []
+        for wh in working_hours:
+            result.append({
+                "day_of_week": wh.day_of_week,
+                "start_time": wh.start_time.strftime("%H:%M"),
+                "end_time": wh.end_time.strftime("%H:%M"),
+            })
+
+        return JsonResponse({"working_hours": result}, status=200)
+
+
+
+
+def get_staff_detail(request, staff_id):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Method not allowed")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

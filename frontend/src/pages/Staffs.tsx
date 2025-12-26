@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffs } from "@/hooks/useStaffs";
+import { useServices } from "@/hooks/useServices";
 import { StaffWizard } from "@/components/staff/StaffWizard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WorkingHoursModal } from "@/components/modals/WorkingHoursModal";
+import { Staff } from "@/types";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -23,7 +31,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import {
   Search,
@@ -37,21 +55,17 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useServices } from "@/hooks/useServices";
 
 export default function Staffs() {
   const { csrfToken, isAuthenticated } = useAuth();
-  
-  const {staffs,isLoading, error,createStaff,} = useStaffs(csrfToken);
-  const {services} = useServices()
+  const { staffs, isLoading, error, createStaff } = useStaffs(csrfToken);
+  const { services } = useServices();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showWizard, setShowWizard] = useState(false);
+
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [showWorkingHours, setShowWorkingHours] = useState(false);
 
   /* ------------------ GUARDS ------------------ */
   if (!isAuthenticated) {
@@ -87,11 +101,12 @@ export default function Staffs() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Staff Members</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Staff Members
+          </h1>
           <p className="text-muted-foreground">
             Manage and view all staff in the organization
           </p>
@@ -212,13 +227,34 @@ export default function Staffs() {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
+
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <Eye className="mr-2 h-4 w-4" /> View
                             </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              className="flex items-center gap-2"
+                              onClick={() => {
+                                setSelectedStaff(staff);
+                                setShowWorkingHours(true);
+                              }}
+                            >
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                {staff.set_timetable
+                                  ? "View working hours"
+                                  : "Set working hours"}
+                              </span>
+                              {!staff.set_timetable && (
+                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                              )}
+                            </DropdownMenuItem>
+
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
+
                             <DropdownMenuItem className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
@@ -234,7 +270,7 @@ export default function Staffs() {
         </CardContent>
       </Card>
 
-      {/* Wizard */}
+      {/* Staff Wizard */}
       <Dialog open={showWizard} onOpenChange={setShowWizard}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -248,6 +284,17 @@ export default function Staffs() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Working Hours Modal */}
+      {selectedStaff && (
+        <WorkingHoursModal
+          staffId={selectedStaff.id}
+          open={showWorkingHours}
+          onClose={() => setShowWorkingHours(false)}
+          canEdit={!selectedStaff.set_timetable}
+          csrfToken={csrfToken}
+        />
+      )}
     </div>
   );
 }

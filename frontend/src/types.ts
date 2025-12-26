@@ -39,3 +39,12 @@ export interface NewStaffPayload {
 
   services_offered?: Service[];
 }
+
+
+
+export interface WorkingHours{
+    staff_member_id: number;
+    day_of_week: number;
+    start_time: string;
+    end_time:string
+}

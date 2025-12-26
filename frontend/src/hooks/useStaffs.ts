@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { NewStaffPayload, Staff } from "@/types/staff";
+import { NewStaffPayload, Staff } from "@/types";
 
 
 

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import { NewStaffPayload, Service } from "@/types/staff";
+import { NewStaffPayload, Service } from "@/types";
 
 interface StaffWizardProps {
   onSuccess?: () => void;
