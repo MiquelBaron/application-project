@@ -126,6 +126,20 @@ export function useClients(csrfToken: string | null) {
     }
   }
 
+  const deleteClient = async(client_id:number) => {
+    const res = await fetch(`${baseUrl}${client_id}/`,{
+       method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        }
+    });
+
+    if(!res.ok){throw new Error("Error deleting client")}
+    await fetchClients();
+
+  }
+
   return {
     clients,
     fetchClients,
@@ -133,6 +147,7 @@ export function useClients(csrfToken: string | null) {
     updateClient, // <-- new method
     clientsCount,
     getClientById,
+    deleteClient,
     loading,
     error,
   };

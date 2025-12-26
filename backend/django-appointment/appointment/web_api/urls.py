@@ -17,7 +17,7 @@ urlpatterns = [
 
     # Staff Members
     path('staffs/', new_staff, name='staffs_list'),
-    path('staffs/<int:object_id>/', get_staff_detail, name='staff_detail'),  # BaseModelView
+    path('staffs/<int:staff_id>/', get_staff_detail, name='staff_detail'),  # BaseModelView
     path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),
 
     # Services

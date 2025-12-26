@@ -58,7 +58,7 @@ import {
 
 export default function Staffs() {
   const { csrfToken, isAuthenticated } = useAuth();
-  const { staffs, isLoading, error, createStaff } = useStaffs(csrfToken);
+  const { staffs, isLoading, error, createStaff, deleteStaff } = useStaffs(csrfToken);
   const { services } = useServices();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -176,7 +176,7 @@ export default function Staffs() {
                       <TableCell>{staff.id}</TableCell>
 
                       <TableCell className="font-medium">
-                        {staff.user_first_name} {staff.user_last_name}
+                        {staff.user_first_name}  {staff.user_last_name}
                       </TableCell>
 
                       <TableCell>
@@ -255,7 +255,7 @@ export default function Staffs() {
                               <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onClick={() => deleteStaff(staff.id) }>
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>

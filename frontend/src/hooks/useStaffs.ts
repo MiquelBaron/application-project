@@ -37,6 +37,25 @@ export function useStaffs(csrfToken?: string) {
     }
   }, []);
 
+
+  const deleteStaff = async (staff_id: number) => {
+  const res = await fetch(`${baseUrl}${staff_id}/`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete staff");
+  }
+  await fetchStaffs(); // refresca la lista
+};
+
+
+
   /* ------------------ CREATE STAFF ------------------ */
   const createStaff = async (payload: NewStaffPayload) => {
     setError(null);
@@ -78,6 +97,7 @@ export function useStaffs(csrfToken?: string) {
     error,
     refetch: fetchStaffs,
     createStaff,
+    deleteStaff
   };
 }
 

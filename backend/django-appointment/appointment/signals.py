@@ -24,10 +24,14 @@ def notify_appointment(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=WorkingHours)
 def set_boolean_working_hours_true(sender, instance, created, **kwargs):
+    print("Working hours signal")
     if not created:
+        print("Not created")
         return
     if not instance.staff_member:
+        print("Not staff")
         return
     staff = instance.staff_member
+    print(staff)
     staff.set_timetable = True
     staff.save()

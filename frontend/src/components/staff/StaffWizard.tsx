@@ -138,6 +138,7 @@ export function StaffWizard({ onSuccess, onCreate, availableServices = [] }: Sta
               </div>
             </div>
           </div>
+          
         );
     }
   };

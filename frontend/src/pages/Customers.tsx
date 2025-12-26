@@ -63,7 +63,7 @@ const formatGender = (gender?: "M" | "F" | "O") => {
 export default function Customers() {
   const { exportMedicalHistory } = useReport();
   const { csrfToken, isAuthenticated } = useAuth();
-  const { clients, createClient, updateClient, getClientById, error, loading } = useClients(csrfToken);
+  const { clients, createClient, updateClient, getClientById,deleteClient, error, loading } = useClients(csrfToken);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -194,7 +194,7 @@ export default function Customers() {
                             <DropdownMenuItem onClick={() => openViewClient(client.id!)}>
                               <Eye className="mr-2 h-4 w-4" /> View
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onClick={()=>deleteClient(client.id)}>
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>

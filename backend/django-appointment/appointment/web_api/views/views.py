@@ -434,7 +434,11 @@ def client_by_id(request,client_id):
             "updated_at": client.updated_at.isoformat(),
         }
         return JsonResponse({"client": data})
-
+    if request.method == "DELETE":
+        client = Client.objects.get(id=client.id)
+        if not client: return HttpResponseBadRequest("Client not found")
+        client.delete()
+        return JsonResponse({"success": "200"})
     else:
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
@@ -486,6 +490,7 @@ def new_staff(request):
         print("POST")
         try:
             data = json.loads(request.body)
+            print(data)
         except json.JSONDecodeError:
             print("Invalid JSON received:", request.body)
             return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -507,8 +512,8 @@ def new_staff(request):
                     username=data["username"],
                     email=data["email"],
                     password=data["password"],
-                    first_name=data.get("first_name", ""),
-                    last_name=data.get("last_name", ""),
+                    first_name=data.get("user_first_name", ""),
+                    last_name=data.get("user_last_name", ""),
                 )
 
                 user.groups.add(Group.objects.get(name="Staff"))
@@ -558,8 +563,7 @@ def new_staff(request):
                 {"error": str(e)},
                 status=500
             )
-    if request.method != "POST":
-        print("NO POST")
+
     else:
         print("MAL")
         return HttpResponseBadRequest(status=400)
@@ -580,16 +584,18 @@ def set_working_hours(request, staff_id):
 
             working_hours = []
             for item in data:
+                print("Current item working hours:", item)
                 working_hours.append(
                     WorkingHours(
                         staff_member=staff_member,
-                        day_of_week=item["day"],
+                        day_of_week=item["day_of_week"],
                         start_time=item["start_time"],
                         end_time=item["end_time"],
                     )
                 )
-
+            # Create multiple database objects in one operation
             WorkingHours.objects.bulk_create(working_hours)
+            staff_member.set_timetable = True
 
             return JsonResponse({"status": "success"}, status=201)
 
@@ -620,11 +626,18 @@ def set_working_hours(request, staff_id):
 
 
 
-
+@login_required
+@permission_required("appointment.delete_staffmember", raise_exception=True)
 def get_staff_detail(request, staff_id):
-    if request.method != "GET":
-        return HttpResponseBadRequest("Method not allowed")
+    if request.method == "GET":
+        pass
 
+    if request.method == "DELETE":
+        staff_member = StaffMember.objects.get(id=staff_id)
+        if not staff_member:
+            return HttpResponseBadRequest("Staff member does not exist")
+        staff_member.delete()
+        return JsonResponse({"status": "success"}, status=200)
 
 
 
