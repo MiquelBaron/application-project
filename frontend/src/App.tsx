@@ -20,6 +20,7 @@ import  ProtectedAdmin  from "./components/ProtectedAdmin";
 import Services from "./pages/Services"
 import NewAppointmentPage from "./pages/NewAppointment";
 import NotificationPage from "./pages/Notifications";
+import DaysOffPage from "./pages/DaysOff";
 
 const queryClient = new QueryClient();
 
@@ -54,15 +55,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/appointments"
-            element={
-                            <MainLayout>
-
-              <div className="p-6 text-center">Appointments view coming soon!</div>
-              </MainLayout>
-            }
-          />
+         
           <Route
             path="/customers"
             element={
@@ -104,14 +97,6 @@ const App = () => (
         />
 
           <Route
-            path="/settings"
-            element={
-              <MainLayout>
-              <div className="p-6 text-center">Settings view coming soon!</div>
-              </MainLayout>
-            }
-          />
-          <Route
             path="/profile"
             element={
               <ProtectedRoute>
@@ -126,8 +111,19 @@ const App = () => (
           <Route
             path="/calendar"
             element={
+              <ProtectedRoute>
               <MainLayout>
               <div className="p-6 text-center">Calendar view coming soon!</div>
+              </MainLayout>
+              </ProtectedRoute>
+
+            }
+          />
+          <Route
+            path="/daysoff"
+            element={
+              <MainLayout>
+              <DaysOffPage/>
               </MainLayout>
 
             }
@@ -141,15 +137,7 @@ const App = () => (
 
             }
           />
-          <Route
-            path="/analytics"
-            element={
-              <MainLayout>
-              <div className="p-6 text-center">Analytics dashboard coming soon!</div>
-              </MainLayout>
-
-            }
-          />
+      
 
           {/* Catch-all 404 */}
           <Route path="*" element={<NotFound />} />

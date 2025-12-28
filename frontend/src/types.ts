@@ -48,3 +48,12 @@ export interface WorkingHours{
     start_time: string;
     end_time:string
 }
+
+export interface DayOff {
+  staff_member_id:number;
+  user_first_name?:string;
+  user_last_name?:string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}

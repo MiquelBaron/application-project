@@ -7,7 +7,7 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 
 from appointment.core.db_helpers import get_staffs_assigned_to_service
-from appointment.models import Appointment, StaffMember, Service, Client, WorkingHours
+from appointment.models import Appointment, StaffMember, Service, Client, WorkingHours, DayOff
 from appointment.core.api_helpers import create_appointment_safe, get_availability_for_service_across_staffs
 from datetime import datetime
 #Login
@@ -641,7 +641,59 @@ def get_staff_detail(request, staff_id):
 
 
 
+def manage_days_off(request, staff_id):
+    if request.method == "GET":
+        days_off = DayOff.objects.filter(staff_member=staff_id)
+        result = []
+        print(staff_id)
+        print(days_off)
+        for day in days_off:
+            result.append({"start_date": day.start_date,
+                           "end_date": day.end_date,
+                           "description": day.description})
+        return JsonResponse(result,safe=False, status=200)
 
+    if request.method == "POST":
+        try:
+            staff_member = StaffMember.objects.get(id=staff_id)
+            data = json.loads(request.body)
+            start_date = datetime.strptime(data["start_date"], "%Y-%m-%d").date()
+            end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
+            description = data["description"]
+
+            day_off = DayOff.objects.create(
+                staff_member=staff_member,
+                start_date=start_date,
+                end_date=end_date,
+                description=description,
+            )
+            return JsonResponse({
+                "id": day_off.id,
+                "start_date": str(day_off.start_date),
+                "end_date": str(day_off.end_date),
+                "description": day_off.description,
+            }, status=201)
+        except Exception as e:
+            logger.exception(f"Error creating days off: {str(e)}")
+            return HttpResponseBadRequest("Error creating days off")
+
+
+def get_days_off(request):
+    result = []
+    if request.method == "GET":
+        for day in DayOff.objects.filter(start_date__gte=datetime.today()):
+            result.append({
+                "staff_member_id": day.staff_member_id,
+                "user_first_name":day.staff_member.user.first_name,
+                "user_last_name": day.staff_member.user.last_name,
+                "start_date": day.start_date,
+                "end_date": day.end_date,
+                "description": day.description,
+            })
+        print(result)
+        return JsonResponse(result, safe=False, status=200)
+    else:
+        return HttpResponseBadRequest("Method not allowed")
 
 
 

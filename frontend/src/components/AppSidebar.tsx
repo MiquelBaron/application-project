@@ -39,6 +39,8 @@ const mainItems = [
   { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
   { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
   { title: "Notifications", url: "/notifications", icon: Bell } ,
+  { title: "Days Off", url: "/daysoff", icon: XCircle } ,
+
 
 ];
 

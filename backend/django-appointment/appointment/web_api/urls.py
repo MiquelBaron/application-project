@@ -55,6 +55,11 @@ urlpatterns = [
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_delete'),
     path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_detail'),
 
+
+    # Days off
+    path('daysoff/staffs/<int:staff_id>/', manage_days_off, name='manage_days_off'),
+    path('daysoff/', get_days_off, name='manage_days_off'),
+
     # Report
     path("export-history/<int:patient_id>/", export_medical_history, name="export_medical_history"),
 
