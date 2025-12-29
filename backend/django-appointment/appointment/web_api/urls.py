@@ -19,7 +19,7 @@ urlpatterns = [
     path('staffs/', new_staff, name='staffs_list'),
     path('staffs/<int:staff_id>/', get_staff_detail, name='staff_detail'),  # BaseModelView
     path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),
-
+    path('staffs/<int:staff_id>/services/', set_staff_services, name='staff_services'),
     # Services
     path('services/', services_list, name='services_list'),
     path('services/<int:object_id>/', service_view, name='service_detail'),

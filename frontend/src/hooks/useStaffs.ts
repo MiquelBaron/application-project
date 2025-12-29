@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { NewStaffPayload, Staff } from "@/types";
-
+import { Service } from "@/types";
 
 
 
@@ -86,6 +86,23 @@ export function useStaffs(csrfToken?: string) {
     }
   };
 
+  const modifyServicesOffered = async(staff_id:number, services:Number[]) =>{
+    const res = await fetch(`${baseUrl}${staff_id}/services/`,{
+      method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+      },
+      body: JSON.stringify(services)
+    });
+
+    const json = await res.json();
+    if(!res.ok){
+      setError(json.error)
+      throw new Error(json.error || "Failed to create staff");
+  }}
+
   /* ------------------ EFFECT ------------------ */
   useEffect(() => {
     fetchStaffs();
@@ -97,7 +114,8 @@ export function useStaffs(csrfToken?: string) {
     error,
     refetch: fetchStaffs,
     createStaff,
-    deleteStaff
+    deleteStaff,
+    modifyServicesOffered
   };
 }
 

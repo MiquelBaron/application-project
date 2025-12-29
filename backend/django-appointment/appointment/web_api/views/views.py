@@ -698,8 +698,19 @@ def get_days_off(request):
 
 
 
+from django.http import JsonResponse
 
-
+@login_required
+@permission_required("appointment.can_link_service_staff", raise_exception=True)
+def set_staff_services(request, staff_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        try:
+            staff_member = StaffMember.objects.get(id=staff_id)
+            staff_member.services_offered.set(data)
+            return JsonResponse({"status": "ok"})
+        except StaffMember.DoesNotExist:
+            return JsonResponse({"error": "Staff member not found"}, status=404)
 
 
 

@@ -57,7 +57,10 @@ class Service(models.Model):
     # meta data
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    class Meta:
+        permissions = [
+            ("can_link_service_staff", "Can link a staff to a service.")
+        ]
     def __str__(self):
         return self.name or "None"
 

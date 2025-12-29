@@ -1,6 +1,9 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDaysoff } from "@/hooks/useDaysoff";
+import { useStaffs } from "@/hooks/useStaffs";
 import {
   Card,
   CardContent,
@@ -36,13 +39,23 @@ const formatDate = (dateStr?: string) => {
 /* ------------------ COMPONENT ------------------ */
 export default function DaysOffPage() {
   const { csrfToken, isAuthenticated } = useAuth();
-  const { getDaysoff, loading, error } = useDaysoff(csrfToken);
+  const { getDaysoff, loading, error, createDayOff } = useDaysoff(csrfToken);
+  const { staffs } = useStaffs(csrfToken);
 
   const [daysoff, setDaysoff] = useState<DayOff[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDayOff, setSelectedDayOff] = useState<DayOff | null>(null);
 
-  /* ------------------ FETCH ALL DAYS OFF ------------------ */
+  // Modal de añadir
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(
+    staffs?.[0]?.id || null
+  );
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+
+  /* ------------------ FETCH DAYS OFF ------------------ */
   useEffect(() => {
     const fetchDaysOff = async () => {
       const data = await getDaysoff();
@@ -52,7 +65,7 @@ export default function DaysOffPage() {
   }, []);
 
   /* ------------------ FILTER ------------------ */
-  const filteredDaysOff = daysoff.filter(d =>
+  const filteredDaysOff = daysoff.filter((d) =>
     (d.description || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -66,16 +79,36 @@ export default function DaysOffPage() {
   if (error)
     return <p className="text-center text-red-500">Error: {error}</p>;
 
+  /* ------------------ HANDLERS ------------------ */
+  const handleAddDayOff = async () => {
+    if (!selectedStaffId) return;
+
+    const newDay = await createDayOff(selectedStaffId, {
+      start_date: newStartDate,
+      end_date: newEndDate,
+      description: newDescription,
+    });
+
+    if (newDay) {
+      setDaysoff([...daysoff, newDay]);
+      setNewStartDate("");
+      setNewEndDate("");
+      setNewDescription("");
+      setSelectedStaffId(staffs?.[0]?.id || null);
+      setShowAddModal(false);
+    }
+  };
+
   /* ------------------ RENDER ------------------ */
   return (
     <div className="space-y-6 animate-fade-in">
-
       {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold">Days Off</h1>
-        <p className="text-muted-foreground">
-          Manage all staff days off
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Days Off</h1>
+          <p className="text-muted-foreground">Manage all staff days off</p>
+        </div>
+        <Button onClick={() => setShowAddModal(true)}>Add Day Off</Button>
       </div>
 
       {/* SEARCH */}
@@ -90,7 +123,7 @@ export default function DaysOffPage() {
             <Input
               placeholder="Search days off..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -102,15 +135,12 @@ export default function DaysOffPage() {
         <CardHeader>
           <CardTitle>Days Off List</CardTitle>
           <CardDescription>
-            {filteredDaysOff.length} record
-            {filteredDaysOff.length !== 1 && "s"}
+            {filteredDaysOff.length} record{filteredDaysOff.length !== 1 && "s"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredDaysOff.length === 0 ? (
-            <p className="text-center text-muted-foreground">
-              No days off found.
-            </p>
+            <p className="text-center text-muted-foreground">No days off found.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -140,9 +170,7 @@ export default function DaysOffPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => setSelectedDayOff(day)}
-                            >
+                            <DropdownMenuItem onClick={() => setSelectedDayOff(day)}>
                               View
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -170,26 +198,82 @@ export default function DaysOffPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <div>
-                <strong>Staff:</strong>{" "}
-                {selectedDayOff.staff_member_id}
+                <strong>Staff:</strong> {selectedDayOff.staff_member_id}
               </div>
               <div>
-                <strong>Start Date:</strong>{" "}
-                {formatDate(selectedDayOff.start_date)}
+                <strong>Start Date:</strong> {formatDate(selectedDayOff.start_date)}
               </div>
               <div>
-                <strong>End Date:</strong>{" "}
-                {formatDate(selectedDayOff.end_date)}
+                <strong>End Date:</strong> {formatDate(selectedDayOff.end_date)}
               </div>
               <div>
-                <strong>Description:</strong>{" "}
-                {selectedDayOff.description || "—"}
+                <strong>Description:</strong> {selectedDayOff.description || "—"}
               </div>
             </CardContent>
           </Card>
         </div>
       )}
 
+      {/* ADD DAY OFF MODAL */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="relative w-full max-w-md">
+            <X
+              className="absolute top-4 right-4 h-5 w-5 cursor-pointer text-gray-500 hover:text-black"
+              onClick={() => setShowAddModal(false)}
+            />
+            <CardHeader>
+              <CardTitle>Add Day Off</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div>
+                <label>Staff</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={selectedStaffId || ""}
+                  onChange={(e) => setSelectedStaffId(Number(e.target.value))}
+                >
+                  {staffs.map((staff) => (
+                    <option key={staff.id} value={staff.id}>
+                      {staff.user_first_name} {staff.user_last_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Start Date</label>
+                <Input
+                  type="date"
+                  value={newStartDate}
+                  onChange={(e) => setNewStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>End Date</label>
+                <Input
+                  type="date"
+                  value={newEndDate}
+                  onChange={(e) => setNewEndDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Description</label>
+                <Input
+                  type="text"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddDayOff}>Save</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

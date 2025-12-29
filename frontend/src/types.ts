@@ -3,6 +3,8 @@ export interface Service {
     name: string;
 }
 
+
+
 export interface Staff {
   id: number;
   
@@ -29,8 +31,8 @@ export interface NewStaffPayload {
   user_last_name?: string;
 
   slot_duration?: number;
-  lead_time?: string;        // "09:00"
-  finish_time?: string;      // "17:00"
+  lead_time?: string;        
+  finish_time?: string;     
   appointment_buffer_time?: number;
 
   work_on_saturday?: boolean;
@@ -39,7 +41,6 @@ export interface NewStaffPayload {
 
   services_offered?: Service[];
 }
-
 
 
 export interface WorkingHours{
