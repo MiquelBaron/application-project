@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth"; // <- importamos useAuth
+import { useAuth } from "@/hooks/useAuth";
 import {
   Calendar,
   CalendarDays,
@@ -30,37 +30,49 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Calendar", url: "/calendar", icon: Calendar },
-  { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
-  { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
-  { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
-  { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
-  { title: "Notifications", url: "/notifications", icon: Bell } ,
-  { title: "Days Off", url: "/daysoff", icon: XCircle } ,
-
+// Agrupamos los items en secciones
+const sidebarSections = [
+  {
+    label: "General",
+    items: [
+      { title: "Dashboard", url: "/", icon: Home },
+      { title: "Calendar", url: "/calendar", icon: Calendar },
+      { title: "Notifications", url: "/notifications", icon: Bell },
+    ]
+  },
+  {
+    label: "Appointments",
+    items: [
+      { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
+    ]
+  },
+  {
+    label: "Management",
+    items: [
+      { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
+      { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
+      { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
+      { title: "Days Off", url: "/daysoff", icon: XCircle },
+    ]
+  },
 
 ];
-
-
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth(); //
+  const { user } = useAuth();
+  const isCollapsed = state === "collapsed";
   const currentPath = location.pathname;
 
-  const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent ${
       isActive ? "bg-primary text-primary-foreground" : "text-foreground"
     }`;
 
-  const isCollapsed = state === "collapsed";
-
   return (
     <Sidebar collapsible="icon">
+      {/* HEADER */}
       <div className="flex h-14 items-center border-b px-4">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
@@ -72,29 +84,30 @@ export function AppSidebar() {
         )}
       </div>
 
+      {/* CONTENT */}
       <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup>
-          <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => {
-                if (item.requiresAdmin && user?.group !== "Admins") return null; // <- solo admin
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url} className={getNavCls}>
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-      
+        {sidebarSections.map((section) => (
+          <SidebarGroup key={section.label}>
+            {!isCollapsed && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  if (item.requiresAdmin && user?.group !== "Admins") return null;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink to={item.url} className={getNavCls}>
+                          <item.icon className="h-4 w-4" />
+                          {!isCollapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   );
