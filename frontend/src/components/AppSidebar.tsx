@@ -33,7 +33,6 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Calendar", url: "/calendar", icon: Calendar },
-  { title: "Appointments", url: "/appointments", icon: CalendarDays },
   { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
   { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
   { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
@@ -44,10 +43,7 @@ const mainItems = [
 
 ];
 
-const managementItems = [
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Configuration", url: "/settings", icon: Settings },
-];
+
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -98,23 +94,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managementItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      
       </SidebarContent>
     </Sidebar>
   );

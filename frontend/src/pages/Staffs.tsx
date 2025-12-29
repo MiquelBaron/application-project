@@ -55,6 +55,9 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import { useDaysoff } from "@/hooks/useDaysoff";
+import { DayOff } from "@/types";
+
 
 export default function Staffs() {
   const { csrfToken, isAuthenticated } = useAuth();
@@ -66,7 +69,18 @@ export default function Staffs() {
 
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [showWorkingHours, setShowWorkingHours] = useState(false);
+  const [daysOff, setDaysOff] = useState<DayOff[]>([]);
+  const [showDaysOff, setShowDaysOff] = useState(false);
 
+  const { getDaysoffByStaff, loading} = useDaysoff(csrfToken);
+
+  const handleViewDaysOff = async (staffId: number) => {
+  console.log(staffId)
+  const data = await getDaysoffByStaff(staffId); // asumiendo que devuelve DayOff[]
+  console.log(data)
+  setDaysOff(data);
+  setShowDaysOff(true);
+};
   /* ------------------ GUARDS ------------------ */
   if (!isAuthenticated) {
     return (
@@ -229,7 +243,7 @@ export default function Staffs() {
                           </DropdownMenuTrigger>
 
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={()=> handleViewDaysOff(staff.id) }>
                               <Eye className="mr-2 h-4 w-4" /> View days off
                             </DropdownMenuItem>
 
@@ -295,6 +309,45 @@ export default function Staffs() {
           csrfToken={csrfToken}
         />
       )}
+      {showDaysOff && (
+  <Dialog open={showDaysOff} onOpenChange={setShowDaysOff}>
+    <DialogContent className="max-w-lg">
+      <DialogHeader>
+        <DialogTitle>Days Off</DialogTitle>
+      </DialogHeader>
+
+      <div className="space-y-2">
+        {daysOff.length === 0 ? (
+          <p className="text-center text-muted-foreground">No days off found.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Start Date</TableHead>
+                <TableHead>End Date</TableHead>
+                <TableHead>Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {daysOff.map((day, index) => (
+                <TableRow key={index}>
+                  <TableCell>{day.start_date}</TableCell>
+                  <TableCell>{day.end_date}</TableCell>
+                  <TableCell>{day.description || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <Button onClick={() => setShowDaysOff(false)}>Close</Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+)}
+
     </div>
   );
 }

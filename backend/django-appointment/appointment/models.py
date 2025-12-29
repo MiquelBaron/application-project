@@ -59,7 +59,7 @@ class Service(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return self.name or "None"
 
     def to_dict(self):
         return {
@@ -295,7 +295,7 @@ class Appointment(models.Model):
     def __str__(self):
         start_dt = combine_date_and_time(self.date, self.start_time)
         end_dt = combine_date_and_time(self.date, self.end_time)
-        return f"{self.client} - {start_dt.strftime('%Y-%m-%d %H:%M')} to {end_dt.strftime('%H:%M')} ({self.service.name})"
+        return f"{self.client} - {start_dt.strftime('%Y-%m-%d %H:%M')} to {end_dt.strftime('%H:%M')} "
 
     def clean(self):
         start = datetime.datetime.combine(self.date, self.start_time)

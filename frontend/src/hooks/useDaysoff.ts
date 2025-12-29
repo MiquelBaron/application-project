@@ -27,6 +27,7 @@ export function useDaysoff(csrfToken: string) {
         throw new Error("Error fetching daysoff.");
       }
       const data: DayOff[] = await res.json();
+      return data;
     } catch (err: any) {
       setError(err.message || "Unknown error");
     } finally {
