@@ -43,13 +43,13 @@ const sidebarSections = [
   {
     label: "Appointments",
     items: [
-      { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle },
+      { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle, requiresAdmin:true },
     ]
   },
   {
     label: "Management",
     items: [
-      { title: "Customers", url: "/customers", icon: Users, requiresAdmin: true },
+      { title: "Customers", url: "/customers", icon: Users },
       { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
       { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
       { title: "Days Off", url: "/daysoff", icon: XCircle },
@@ -86,28 +86,39 @@ export function AppSidebar() {
 
       {/* CONTENT */}
       <SidebarContent className="overflow-x-hidden">
-        {sidebarSections.map((section) => (
+        {sidebarSections.map((section) => {
+        // Filtrar items visibles según permisos
+        const visibleItems = section.items.filter(
+          (item) => !item.requiresAdmin || user?.group === "Admins"
+        );
+
+        // Si no hay items visibles → no renderizar la sección
+        if (visibleItems.length === 0) return null;
+
+        return (
           <SidebarGroup key={section.label}>
-            {!isCollapsed && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
+            {!isCollapsed && (
+              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+            )}
+
             <SidebarGroupContent>
               <SidebarMenu>
-                {section.items.map((item) => {
-                  if (item.requiresAdmin && user?.group !== "Admins") return null;
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <NavLink to={item.url} className={getNavCls}>
-                          <item.icon className="h-4 w-4" />
-                          {!isCollapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                {visibleItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url} className={getNavCls}>
+                        <item.icon className="h-4 w-4" />
+                        {!isCollapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        );
+      })}
+
       </SidebarContent>
     </Sidebar>
   );

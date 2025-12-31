@@ -207,10 +207,7 @@ class MedicalRecordView(BaseModelView):
     list_fields = ['id', 'client', 'allergies', 'medical_conditions', 'medications', 'notes', 'blood_type']
     detail_fields = ['id', 'client', 'allergies', 'medical_conditions', 'medications', 'notes', 'blood_type']
 
-    permission_view = 'appointment.view_medicalrecord'
-    permission_create = 'appointment.add_medicalrecord'
-    permission_edit = 'appointment.change_medicalrecord'
-    permission_delete = 'appointment.delete_medicalrecord'
+
 
     def get_queryset(self, request):
         """Opcional: filtrar por cliente si viene query param client_id"""

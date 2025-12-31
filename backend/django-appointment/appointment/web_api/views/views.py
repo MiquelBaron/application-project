@@ -435,6 +435,8 @@ def client_by_id(request,client_id):
         }
         return JsonResponse({"client": data})
     if request.method == "DELETE":
+        if not request.user.has_perm('appointment.delete_client'):
+            return JsonResponse({"error": "Permission denied"}, status=403)
         client = Client.objects.get(id=client.id)
         if not client: return HttpResponseBadRequest("Client not found")
         client.delete()
@@ -450,9 +452,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 @login_required
-@permission_required("appointment.add_user")
 def new_staff(request):
-    print("Received staff request")
     if request.method == "GET":
         try:
             logger.info("Fetching all staff members")
@@ -487,7 +487,8 @@ def new_staff(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     if request.method == "POST":
-        print("POST")
+        if not request.user.has_perm("appointment.add_user"):
+            return HttpResponseForbidden("Permission denied")
         try:
             data = json.loads(request.body)
             print(data)
@@ -654,6 +655,8 @@ def manage_days_off(request, staff_id):
         return JsonResponse(result,safe=False, status=200)
 
     if request.method == "POST":
+        if not request.user.has_perm("appointment.add_dayoff"):
+            return HttpResponseForbidden()
         try:
             staff_member = StaffMember.objects.get(id=staff_id)
             data = json.loads(request.body)
@@ -681,7 +684,14 @@ def manage_days_off(request, staff_id):
 def get_days_off(request):
     result = []
     if request.method == "GET":
-        for day in DayOff.objects.filter(start_date__gte=datetime.today()):
+        if request.user.groups.filter(name="Admins").exists():
+            days = DayOff.objects.filter(start_date__gte=datetime.today())
+        else:
+            print(request.user)
+            staff = StaffMember.objects.get(user=request.user)
+            days = DayOff.objects.filter(start_date__gte=datetime.today(), staff_member=staff)
+
+        for day in days:
             result.append({
                 "staff_member_id": day.staff_member_id,
                 "user_first_name":day.staff_member.user.first_name,

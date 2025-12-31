@@ -38,7 +38,7 @@ const formatDate = (dateStr?: string) => {
 
 /* ------------------ COMPONENT ------------------ */
 export default function DaysOffPage() {
-  const { csrfToken, isAuthenticated } = useAuth();
+  const { csrfToken, isAuthenticated, user } = useAuth();
   const { getDaysoff, loading, error, createDayOff } = useDaysoff(csrfToken);
   const { staffs } = useStaffs(csrfToken);
 
@@ -108,7 +108,8 @@ export default function DaysOffPage() {
           <h1 className="text-3xl font-bold">Days Off</h1>
           <p className="text-muted-foreground">Manage all staff days off</p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>Add Day Off</Button>
+        { user.group === "Admins" && (
+          <Button onClick={() => setShowAddModal(true)}>Add Day Off</Button>)}
       </div>
 
       {/* SEARCH */}

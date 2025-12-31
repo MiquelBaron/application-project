@@ -38,7 +38,6 @@ def staffs_list(request):
         return JsonResponse({'staffs': data})
 
 @login_required
-@permission_required('appointment.view_service', raise_exception=True)
 def services_list(request):
     if request.method == 'GET':
         services = Service.objects.all()
@@ -53,7 +52,6 @@ def create_service(request):
         service = Service()
 
 @login_required
-@permission_required('appointment.view_client', raise_exception=True)
 def clients_post_get(request):
 
     if request.method == 'GET':

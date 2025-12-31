@@ -68,8 +68,6 @@ export function StaffWizard({ onSuccess, onCreate, availableServices = [] }: Sta
         return (
           <div className="space-y-4">
             <Input type="number" placeholder="Slot Duration (minutes)" value={formData.slot_duration || ""} onChange={(e) => handleChange({ slot_duration: Number(e.target.value) })} />
-            <Input type="time" placeholder="Lead Time" value={formData.lead_time || ""} onChange={(e) => handleChange({ lead_time: e.target.value })} />
-            <Input type="time" placeholder="Finish Time" value={formData.finish_time || ""} onChange={(e) => handleChange({ finish_time: e.target.value })} />
             <Input type="number" placeholder="Appointment Buffer Time (minutes)" value={formData.appointment_buffer_time || ""} onChange={(e) => handleChange({ appointment_buffer_time: Number(e.target.value) })} />
 
             <div className="flex gap-4">
@@ -116,8 +114,7 @@ export function StaffWizard({ onSuccess, onCreate, availableServices = [] }: Sta
               <div className="bg-muted p-3 rounded space-y-1">
                 <p className="font-medium">Staff Configuration</p>
                 <p><strong>Slot Duration:</strong> {formData.slot_duration ? `${formData.slot_duration} min` : "—"}</p>
-                <p><strong>Lead Time:</strong> {formData.lead_time || "—"}</p>
-                <p><strong>Finish Time:</strong> {formData.finish_time || "—"}</p>
+              
                 <p><strong>Buffer Time:</strong> {formData.appointment_buffer_time ? `${formData.appointment_buffer_time} min` : "—"}</p>
                 <p><strong>Work on Saturday:</strong> {formData.work_on_saturday ? "Yes" : "No"}</p>
                 <p><strong>Work on Sunday:</strong> {formData.work_on_sunday ? "Yes" : "No"}</p>
@@ -153,13 +150,15 @@ export function StaffWizard({ onSuccess, onCreate, availableServices = [] }: Sta
   }
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
+    <Card className="max-w-md mx-auto max-h-[90vh] flex flex-col">
+      <CardHeader className="shrink-0">
         <CardTitle>Create Staff Member</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+
+      <CardContent className="flex-1 overflow-y-auto space-y-6">
         {renderStep()}
-        <div className="flex justify-between pt-4">
+
+        <div className="flex justify-between pt-4 sticky bottom-0 bg-background pb-2">
           {step > 1 && (
             <Button variant="outline" onClick={prevStep}>
               <ChevronLeft className="h-4 w-4 mr-1" /> Back
@@ -181,5 +180,6 @@ export function StaffWizard({ onSuccess, onCreate, availableServices = [] }: Sta
         </div>
       </CardContent>
     </Card>
+
   );
 }
