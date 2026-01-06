@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, MoreHorizontal, X } from "lucide-react";
 import { DayOff } from "@/types";
-
 /* ------------------ UTILS ------------------ */
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return "—";

@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import transaction
 from django.forms import model_to_dict
 
@@ -277,13 +277,26 @@ def availability_for_staff(request, staff_id, service_id, day_str):
 
 def get_session(request):
     user = request.user
-    return JsonResponse({
+    data = {
         "user_id": user.id,
         "username": user.username,
-        "group": user.groups.first().name if user.groups.exists() else None,
+        "group": "Staffs",
+        "email": user.email,
         "is_superuser": user.is_superuser,
-        "staff_info": getattr(user, "staff_info", None),
-    })
+    }
+    print(data)
+
+    try:
+        staff_member = StaffMember.objects.get(user=user)
+        data.update({
+            "services_offered": staff_member.get_services_offered(),
+            "slot_duration": staff_member.get_slot_duration(),
+            "appointment_buffer_time": staff_member.get_appointment_buffer_time_text(),
+        })
+    except ObjectDoesNotExist:
+        pass
+
+    return JsonResponse(data)
 
 
 @login_required

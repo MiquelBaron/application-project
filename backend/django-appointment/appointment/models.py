@@ -658,7 +658,7 @@ class Invoice(models.Model):
         self.payment_date = timezone.now()
         self.save()
 
-# For BI (KPI or events) --> new
+'''# For BI (KPI or events) --> new
 class ActivityLog(models.Model):
     actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     action = models.CharField(max_length=100)
@@ -668,7 +668,7 @@ class ActivityLog(models.Model):
     details = models.JSONField(blank=True, null=True)
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-timestamp']'''
 
 
 class Notification(models.Model):

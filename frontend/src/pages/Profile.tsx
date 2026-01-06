@@ -1,23 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserIcon, UsersIcon, CogIcon } from "lucide-react";
-
-type User = {
-  id: number;
-  username: string;
-  group: string;
-  isSuperuser: boolean;
-  staffInfo: {
-    group: string;
-    staff_id: number;
-    slot_duration: number;
-    services: string[];
-  } | null;
-};
+import { UserIcon, CogIcon } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Profile() {
-  const userString = sessionStorage.getItem("user");
-  const user: User | null = userString ? JSON.parse(userString) : null;
+  const { user } = useAuth();
 
   if (!user) {
     return (
@@ -39,19 +26,27 @@ export default function Profile() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <p className="text-lg font-semibold">Username: <span className="font-normal">{user.username}</span></p>
+            <p className="text-lg font-semibold">
+              Username: <span className="font-normal">{user.username}</span>
+            </p>
             <p>
               Group: <Badge variant="outline">{user.group}</Badge>
             </p>
             <p>
+              Email: <Badge variant="outline">{user.email}</Badge>
+            </p>
+            <div>
+ <p>
               Superuser: <Badge variant="outline">{user.isSuperuser ? "Yes" : "No"}</Badge>
             </p>
+            </div>
+           
           </div>
         </CardContent>
       </Card>
 
       {/* STAFF INFO CARD */}
-      {user.staffInfo && (
+      {user.group === "Staffs" && user.staffInfo && (
         <Card className="shadow-lg border border-gray-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

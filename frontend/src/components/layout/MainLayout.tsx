@@ -60,8 +60,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={async () => {
-                      await logout(); // llama al endpoint y limpia sessionStorage
-                      navigate("/login",{ replace: true }); // redirige al login
+                      await logout(); 
+                      navigate("/login",{ replace: true }); 
                     }}
                   >
                     Sign out

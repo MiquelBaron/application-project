@@ -2,20 +2,17 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Calendar,
-  CalendarDays,
-  Settings,
-  BarChart3,
   Users,
-  Clock,
   PlusCircle,
   Home,
-  CheckCircle,
   XCircle,
   ClipboardCheck,
-  Stethoscope,
-  HeartCrack,
   Tablet,
-  Bell
+  Bell,
+  CalendarCheck,
+  User2,
+  Box,
+  Layers
 } from "lucide-react";
 
 import {
@@ -43,15 +40,18 @@ const sidebarSections = [
   {
     label: "Appointments",
     items: [
+      {
+        title: "Appointments", url: "/calendar?view=agenda", icon: CalendarCheck, requiresAdmin: false},
       { title: "Create Appointment", url: "/appointments/new", icon: PlusCircle, requiresAdmin:true },
+
     ]
   },
   {
     label: "Management",
     items: [
       { title: "Customers", url: "/customers", icon: Users },
-      { title: "Staff members", url: "/staff", icon: Users, requiresAdmin: true },
-      { title: "Services", url: "/services", icon: ClipboardCheck, requiresAdmin: true },
+      { title: "Staff members", url: "/staff", icon: User2, requiresAdmin: true },
+      { title: "Services", url: "/services", icon: Layers, requiresAdmin: true },
       { title: "Days Off", url: "/daysoff", icon: XCircle },
     ]
   },
@@ -71,18 +71,19 @@ export function AppSidebar() {
     }`;
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="bg-gray-900 ">
       {/* HEADER */}
-      <div className="flex h-14 items-center border-b px-4">
-        {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold text-foreground">AppointmentPro</span>
-          </div>
-        )}
+<div className="flex h-14 items-center border-b border-gray-700 px-4">
+  {!isCollapsed && (
+    <div className="flex items-center gap-2">
+      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+        <Calendar className="h-4 w-4 text-white" />
       </div>
+      <span className="font-semibold text-white">AppointmentPro</span>
+    </div>
+  )}
+</div>
+
 
       {/* CONTENT */}
       <SidebarContent className="overflow-x-hidden">
@@ -98,7 +99,7 @@ export function AppSidebar() {
         return (
           <SidebarGroup key={section.label}>
             {!isCollapsed && (
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+              <SidebarGroupLabel  className="text-gray-300">{section.label}</SidebarGroupLabel>
             )}
 
             <SidebarGroupContent>
