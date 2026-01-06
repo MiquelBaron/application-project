@@ -8,6 +8,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { ServiceModal } from "@/components/modals/serviceModal";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +19,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useForm } from "react-hook-form";
+import { Form, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {
   Trash,
   Edit,
@@ -27,7 +31,24 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+import {  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+ } from "@/components/ui/alert-dialog";
+
 export default function ServicesAdminPage() {
+  interface ServiceFormValues {
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  duration: string;
+}
   const {csrfToken} = useAuth();
   const {
     services,
@@ -41,6 +62,7 @@ export default function ServicesAdminPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [formData, setFormData] = useState<Partial<Service>>({});
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
 
   const openModalForEdit = (service: Service) => {
     setEditingService(service);
@@ -169,7 +191,7 @@ export default function ServicesAdminPage() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => handleDelete(service.id)}
+                            onClick={() => setServiceToDelete(service)}
                             className="hover:bg-red-100"
                           >
                             <Trash size={16} className="text-red-600" />
@@ -213,92 +235,43 @@ export default function ServicesAdminPage() {
         )
       }
 
-        {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-lg p-6 shadow-2xl border border-gray-200 rounded-2xl animate-in fade-in-50 bg-white">
-              <CardHeader className="pb-2 border-b">
-                <CardTitle className="text-lg font-semibold text-gray-800">
-                  {editingService ? "Edit Service" : "New Service"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <Label>Name</Label>
-                    <Input
-                      name="name"
-                      value={formData.name || ""}
-                      onChange={handleFormChange}
-                      required
-                      placeholder="Service name"
-                    />
-                  </div>
+        {serviceToDelete &&
+        <AlertDialog open onOpenChange={(open) =>{ if(!open) setServiceToDelete(null)}}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete service</AlertDialogTitle>
+              <AlertDialogDescription>Are you sure you want to delete service <strong>{serviceToDelete.name}</strong>?</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive"
+                onClick={async ()=>{ await deleteService(serviceToDelete.id); setServiceToDelete(null);}}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        }
 
-                  <div>
-                    <Label>Description</Label>
-                    <Textarea
-                      name="description"
-                      value={formData.description || ""}
-                      onChange={handleFormChange}
-                      rows={3}
-                      placeholder="Short description"
-                    />
-                  </div>
+        <ServiceModal
+          modalOpen={modalOpen}
+          setModalOpen={setModalOpen}
+          editingService={editingService}
+          onSubmit={async (data) => {
+            try {
+              if (editingService) {
+                await editService(editingService.id, data);
+              } else {
+                await createService(data);
+              }
+              setModalOpen(false);
+              setEditingService(null);
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Price</Label>
-                      <Input
-                        name="price"
-                        type="number"
-                        value={formData.price || ""}
-                        onChange={handleFormChange}
-                        required
-                        placeholder="e.g. 50"
-                      />
-                    </div>
-                    <div>
-                      <Label>Currency</Label>
-                      <Input
-                        name="currency"
-                        value={formData.currency || "EUR"}
-                        onChange={handleFormChange}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Duration (HH:MM)</Label>
-                    <Input
-                      name="duration"
-                      value={formData.duration || ""}
-                      onChange={handleFormChange}
-                      required
-                      placeholder="00:30"
-                    />
-                  </div>
-
-                  <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {editingService ? "Update" : "Create"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </ProtectedAdmin>
   );

@@ -57,9 +57,17 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-import z from "zod";
 
-
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 interface Service {
   id: number;
   name: string;
@@ -140,6 +148,7 @@ export default function Staffs() {
   const [showWorkingHours, setShowWorkingHours] = useState(false);
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
   const [showDaysOff, setShowDaysOff] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<Staff|null>(null);
 
   // Nuevo estado para modal de services y lista local
   const [showServicesModal, setShowServicesModal] = useState(false);
@@ -315,7 +324,7 @@ export default function Staffs() {
                               {!staff.set_timetable && <AlertTriangle className="h-4 w-4 text-yellow-600" />}
                             </DropdownMenuItem>
                          
-                            <DropdownMenuItem className="text-destructive" onClick={() => deleteStaff(staff.id)}>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setStaffToDelete(staff)}>
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -329,7 +338,25 @@ export default function Staffs() {
           )}
         </CardContent>
       </Card>
-
+      
+      {/*Staff to delete confirmation*/ }
+      {staffToDelete && (
+        <AlertDialog open onOpenChange={(open) => {if(!open) setStaffToDelete(null)}}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete staff</AlertDialogTitle>
+              <AlertDialogDescription>Are you sure you want to delete staff <strong>{staffToDelete.user_first_name} {staffToDelete.user_last_name}?</strong></AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive" 
+              onClick={async ()=>{await deleteStaff(staffToDelete.id); setStaffToDelete(null);}}> 
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       {/* Staff Wizard */}
       <Dialog open={showWizard} onOpenChange={setShowWizard}>
         <DialogContent className="max-w-lg">

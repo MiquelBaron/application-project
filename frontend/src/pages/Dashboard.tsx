@@ -23,6 +23,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth"
 import { useAppointments } from "@/hooks/useAppointment";
 import { useClients } from "@/hooks/useClients";
+import { Popover, PopoverContent ,PopoverTrigger } from "@/components/ui/popover";
 
  interface Appointment {
   id: number;
@@ -103,19 +104,7 @@ export default function Dashboard() {
     },
   ];
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, string> = {
-      confirmed: "bg-green-100 text-green-800",
-      pending: "bg-yellow-100 text-yellow-800",
-      cancelled: "bg-red-100 text-red-800",
-      completed: "bg-blue-100 text-blue-800",
-    };
-    return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded ${variants[status] || "bg-gray-100 text-gray-800"}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
-  };
+
 
   return (
     <div className="space-y-6 animate-fade-in">

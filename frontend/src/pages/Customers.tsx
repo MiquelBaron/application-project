@@ -12,6 +12,16 @@ import { useReport } from "@/hooks/useReport";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 /* ------------------ TYPES ------------------ */
 export interface Client {
@@ -75,6 +85,8 @@ export default function Customers() {
   const [viewLoading, setViewLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
+  const [ clientToDelete, setClientToDelete] = useState<Client | null>(null);
+
   /* ------------------ FORM ------------------ */
   const { register, handleSubmit, setValue } = useForm<Client>({
     resolver: zodResolver(newClientSchema),
@@ -109,6 +121,7 @@ export default function Customers() {
     }
   };
 
+  
   
   const filteredClients = clients.filter(c =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -194,10 +207,12 @@ export default function Customers() {
                             <DropdownMenuItem onClick={() => openViewClient(client.id!)}>
                               <Eye className="mr-2 h-4 w-4" /> View
                             </DropdownMenuItem>
-                            {user.group ==="Admins" && (
-                            <DropdownMenuItem className="text-destructive" onClick={()=>deleteClient(client.id)}>
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>)}
+                            {user.group === "Admins" && (
+                              <DropdownMenuItem className="text-destructive" onClick={()=>setClientToDelete(client)}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                        )}
+
                             
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -210,6 +225,44 @@ export default function Customers() {
           )}
         </CardContent>
       </Card>
+
+      {clientToDelete && (
+        <AlertDialog
+    open
+    onOpenChange={(open) => {
+      if (!open) setClientToDelete(null);
+    }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete client</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold">
+                    {clientToDelete.first_name} {clientToDelete.last_name}
+                  </span>
+                  ?
+                  <br />
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+                <AlertDialogAction
+                  className="bg-destructive"
+                  onClick={async () => {
+                    await deleteClient(clientToDelete.id!);
+                    setClientToDelete(null);
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+      )}
 
       {/* VIEW CLIENT MODAL */}
       {viewClientModalOpen && viewClient && (

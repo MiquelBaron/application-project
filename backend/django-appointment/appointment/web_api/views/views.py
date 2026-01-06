@@ -280,12 +280,10 @@ def get_session(request):
     data = {
         "user_id": user.id,
         "username": user.username,
-        "group": "Staffs",
+        "group": user.groups.first().name,
         "email": user.email,
         "is_superuser": user.is_superuser,
     }
-    print(data)
-
     try:
         staff_member = StaffMember.objects.get(user=user)
         data.update({

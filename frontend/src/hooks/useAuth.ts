@@ -84,6 +84,7 @@ export function useAuth() {
         id: data.user_id,
         username: data.username,
         group: data.group,
+        email: data.email,
         isSuperuser: data.is_superuser,
         staffInfo: data.services_offered
           ? {

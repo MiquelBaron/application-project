@@ -27,20 +27,17 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex h-14 items-center justify-between border-b bg-card px-4 shadow-soft">
+          <header className="flex h-14 items-center justify-between bg-gray-900 border-b bg-card px-4 shadow-soft">
             <div className="flex items-center gap-4">
-              <SidebarTrigger />
+              <SidebarTrigger className="text-white" />
               <div className="hidden md:block">
-                <h1 className="text-lg font-semibold text-foreground">
+                <h1 className="text-lg font-semibold text-white">
                   Appointment Management - {user?.group || null}
                 </h1>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon">
-                <Bell className="h-4 w-4" />
-              </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -74,8 +71,15 @@ export function MainLayout({ children }: MainLayoutProps) {
           <main className="flex-1 overflow-y-auto bg-gradient-card p-6">
             {children}
           </main>
+           <footer className="bg-gray-900 text-gray-200 text-sm py-3 px-4 shadow-inner text-center">
+  Developed by <span className="font-semibold">Miquel Barón</span> &copy; {new Date().getFullYear()}
+</footer>
+
         </div>
+        
       </div>
+
+     
     </SidebarProvider>
   );
 }
