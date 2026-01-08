@@ -2,6 +2,18 @@ import { useState } from "react";
 import { Calendar, dayjsLocalizer, Views, View } from "react-big-calendar";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { useAppointments } from "@/hooks/useAppointment";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Appointment {
   id: number;
@@ -20,9 +32,29 @@ interface StaffCalendarProps {
 
 const localizer = dayjsLocalizer(dayjs);
 
-export function StaffCalendar({ appointments, initialView = Views.MONTH }: StaffCalendarProps) {
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+// Función para generar un color consistente a partir del nombre del staff
+function getColorFromString(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
+}
 
+export function StaffCalendar({
+  appointments: initialAppointments,
+  initialView = Views.MONTH,
+}: StaffCalendarProps) {
+  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [view, setView] = useState<View>(initialView);
+  const [appointmentDelete, setAppointmentDelete] = useState<any>(null);
+
+  const { deleteAppointment } = useAppointments();
+  const { csrfToken } = useAuth();
+
+  // Convertimos citas a eventos del calendario
   const events = appointments
     .map((appt) => {
       if (!appt.date || !appt.start_time) return null;
@@ -40,14 +72,9 @@ export function StaffCalendar({ appointments, initialView = Views.MONTH }: Staff
     })
     .filter(Boolean);
 
-  const staffColors: Record<string, string> = {
-    "Aleix Rebollo": "#3182ce",
-    "Raquel Admin": "#38a169",
-  };
-
   const eventStyleGetter = (event: any) => ({
     style: {
-      backgroundColor: staffColors[event.staff] || "#718096",
+      backgroundColor: getColorFromString(event.staff || "Unknown"),
       borderRadius: "8px",
       color: "white",
       padding: "4px 6px",
@@ -63,8 +90,6 @@ export function StaffCalendar({ appointments, initialView = Views.MONTH }: Staff
     </div>
   );
 
-  const [view, setView] = useState<View>(initialView);
-
   return (
     <div className="p-4 bg-white rounded-lg shadow-md h-[700px] relative">
       <Calendar
@@ -75,67 +100,108 @@ export function StaffCalendar({ appointments, initialView = Views.MONTH }: Staff
         titleAccessor="title"
         eventPropGetter={eventStyleGetter}
         components={{ event: EventComponent }}
-        defaultView={initialView}  // vista inicial
-        view={view}                // vista controlada
-        onView={(v) => setView(v)} // manejar cambios de vista por el usuario
+        defaultView={initialView}
+        view={view}
+        onView={(v) => setView(v)}
         views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
         onSelectEvent={(event) => setSelectedEvent(event)}
       />
 
-      {/* Modal Profesional */}
-{selectedEvent && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 animate-fadeIn">
-    <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative transform transition-transform duration-200 scale-95 animate-scaleIn">
-      {/* Botón de cierre */}
-      <button
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
-        onClick={() => setSelectedEvent(null)}
-        aria-label="Cerrar"
-      >
-        ✖
-      </button>
+      {/* Modal de evento */}
+      {selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative transform transition-transform duration-200 scale-95 animate-scaleIn">
+            <div className="mb-4 border-b border-gray-200 pb-2">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                {selectedEvent.title.replace("Client: ", "")}
+              </h2>
+              <p className="text-sm text-gray-500"> Staff: {selectedEvent.staff}</p>
+            </div>
 
-      {/* Header */}
-      <div className="mb-4 border-b border-gray-200 pb-2">
-        <h2 className="text-2xl font-semibold text-gray-800">
-          {selectedEvent.title}
-        </h2>
-        <p className="text-sm text-gray-500"> Staff: {selectedEvent.staff}</p>
-      </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Service:</span>
+                <span className="text-gray-800">{selectedEvent.service}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Start:</span>
+                <span className="text-gray-800">
+                  {dayjs(selectedEvent.start).format("DD/MM/YYYY HH:mm")}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">End:</span>
+                <span className="text-gray-800">
+                  {dayjs(selectedEvent.end).format("DD/MM/YYYY HH:mm")}
+                </span>
+              </div>
+            </div>
 
-      {/* Body */}
-      <div className="space-y-3">
-        <div className="flex justify-between">
-          <span className="font-medium text-gray-600">Service:</span>
-          <span className="text-gray-800">{selectedEvent.service}</span>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+                onClick={() => setAppointmentDelete(selectedEvent)}
+              >
+                Delete
+              </button>
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
+                onClick={() => setSelectedEvent(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="font-medium text-gray-600">Start:</span>
-          <span className="text-gray-800">
-            {dayjs(selectedEvent.start).format("DD/MM/YYYY HH:mm")}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-medium text-gray-600">End:</span>
-          <span className="text-gray-800">
-            {dayjs(selectedEvent.end).format("DD/MM/YYYY HH:mm")}
-          </span>
-        </div>
-      </div>
+      )}
 
-      {/* Footer opcional */}
-      <div className="mt-6 text-right">
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-          onClick={() => setSelectedEvent(null)}
+      {/* AlertDialog de confirmación */}
+      {appointmentDelete && (
+        <AlertDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setAppointmentDelete(null);
+          }}
         >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete client</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the appointment on{" "}
+                <span className="font-semibold">
+                  {dayjs(appointmentDelete.start).format("DD/MM/YYYY HH:mm")}
+                </span>{" "}
+                or the service <strong>{appointmentDelete.service}</strong> and client{" "}
+                <strong>{appointmentDelete.title.replace("Client: ", "")}</strong>?
+                <br />
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
 
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive"
+                onClick={async () => {
+                  try {
+                    await deleteAppointment(appointmentDelete.id!, csrfToken);
+                    // Actualizamos el estado local para recargar el calendario
+                    setAppointments((prev) =>
+                      prev.filter((a) => a.id !== appointmentDelete.id)
+                    );
+                    setAppointmentDelete(null);
+                    setSelectedEvent(null);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

@@ -227,7 +227,7 @@ export default function AppointmentWizard({ onComplete }: AppointmentWizardProps
           <p>
             <strong>Time:</strong> {selectedTime ?? "-"}
           </p>
-          <p className="mt-4 text-muted">Click "Confirm" to save the appointment.</p>
+          <p className="mt-7 ">Click "Confirm" to save the appointment.</p>
         </FormWizard.TabContent>
       </FormWizard>
 
