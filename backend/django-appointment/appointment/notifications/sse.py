@@ -41,7 +41,7 @@ def notification_stream(request):
                 time.sleep(1)
 
         except GeneratorExit:
-            logger.info(f"👋 Usuario {user_id} desconectado")
+            logger.info(f"Usuario {user_id} desconectado")
         except Exception as e:
             logger.error(f"❌ Error en SSE: {e}")
 
@@ -62,6 +62,6 @@ def add_notification_to_queue(user_id, message):
             user_messages[user_key] = []
 
         user_messages[user_key].append(message)
-        logger.info(f"💾 Notificación en cola para usuario {user_id}")
+        logger.info(f"Notificación en cola para usuario {user_id}")
 
     return True

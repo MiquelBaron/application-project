@@ -52,16 +52,40 @@ export default function NotificationPage() {
               <div className="p-8 text-center text-gray-500">
                 <div className="text-4xl mb-4">📭</div>
                 <p className="text-lg">No notifications</p>
-                <p className="text-sm mt-1">New appointments will appear here automatically</p>
+                <p className="text-sm mt-1">Appointment notifications will appear here automatically</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div key={notification.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <h3 className="font-semibold text-gray-900">New appointment booked</h3>
-                    </div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        notification.variant === 'deleted'
+                          ? 'bg-red-500'
+                          : 'bg-blue-500'
+                      }`}
+                    />
+                                          <h3
+                        className={`font-semibold ${
+                          notification.variant === 'deleted'
+                            ? 'text-red-700'
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        {notification.title}
+                        <span
+  className={`text-xs px-2 py-1 rounded-full ${
+    notification.variant === 'deleted'
+      ? 'bg-red-100 text-red-700'
+      : 'bg-blue-100 text-blue-700'
+  }`}
+>
+  {notification.variant === 'deleted' ? 'Cancelled' : 'Created'}
+</span>
+
+                      </h3>
+                  </div>
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-500">
                         {formatTime(notification.receivedAt)}

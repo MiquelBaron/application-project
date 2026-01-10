@@ -1,15 +1,40 @@
 // hooks/useNotifications.js
 import { useEffect, useState } from 'react';
 
+// Normaliza eventos SSE a algo que el frontend pueda usar
+const normalizeNotification = (data) => {
+    switch (data.type) {
+        case 'appointment.created':
+            return {
+                ...data,
+                variant: 'created',
+                title: 'New appointment booked',
+                color: 'blue',
+            };
+
+        case 'appointment.deleted':
+            return {
+                ...data,
+                variant: 'deleted',
+                title: 'Appointment cancelled',
+                color: 'red',
+            };
+
+        default:
+            return null;
+    }
+};
+
 export const useNotifications = () => {
-    // Load notifications from localStorage on startup
+    // Cargar notificaciones guardadas en localStorage
     const [notifications, setNotifications] = useState(() => {
         const saved = localStorage.getItem('app-notifications');
         return saved ? JSON.parse(saved) : [];
     });
+
     const [isConnected, setIsConnected] = useState(false);
 
-    // Save to localStorage when notifications change
+    // Guardar en localStorage cuando cambian
     useEffect(() => {
         localStorage.setItem('app-notifications', JSON.stringify(notifications));
     }, [notifications]);
@@ -26,25 +51,27 @@ export const useNotifications = () => {
         };
 
         eventSource.onmessage = (event) => {
-            if (event.data.startsWith(':')) {
-                console.log('💓 SSE keep-alive');
-                return;
-            }
-            
+            if (event.data.startsWith(':')) return; // keep-alive
+
             try {
                 const data = JSON.parse(event.data);
-                console.log('📨 New SSE notification:', data);
-                
-                if (data.type === 'appointment_created') {
-                    // Add timestamp for sorting
-                    const notificationWithTime = {
-                        ...data,
-                        id: Date.now(), // Unique ID
-                        receivedAt: new Date().toISOString()
-                    };
-                    
-                    setNotifications(prev => [notificationWithTime, ...prev]);
-                }
+                const normalized = normalizeNotification(data);
+
+                if (!normalized) return;
+
+                const notificationWithMeta = {
+                    ...normalized,
+                    // Usamos appointment_id como id para React
+                    id: normalized.appointment_id,
+                    receivedAt: new Date().toISOString(),
+                };
+
+                setNotifications(prev => {
+                    // Reemplaza notificaciones previas del mismo appointment
+                    const filtered = prev.filter(n => n.appointment_id !== normalized.appointment_id);
+                    return [notificationWithMeta, ...filtered];
+                });
+
             } catch (error) {
                 console.error('❌ Error parsing SSE:', error);
             }
@@ -61,12 +88,12 @@ export const useNotifications = () => {
         };
     }, []);
 
-    // Function to clear all notifications
+    // Limpiar todas las notificaciones
     const clearNotifications = () => {
         setNotifications([]);
     };
 
-    // Function to remove a specific notification
+    // Remover una notificación específica
     const removeNotification = (id) => {
         setNotifications(prev => prev.filter(notif => notif.id !== id));
     };

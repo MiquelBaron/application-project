@@ -1,5 +1,5 @@
 # appointment/signals.py
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from appointment.core.db_helpers import WorkingHours
@@ -15,12 +15,20 @@ def notify_appointment(sender, instance, created, **kwargs):
         return
 
     try:
-        _logger.info(f"🎯 Signal: Nueva cita {instance.id}")
-        send_appointment_notification(instance.id)
+        _logger.info(f"🎯 Signal: New appointment {instance.id}")
+        send_appointment_notification(instance, "appointment.created")
         _logger.info(f"✅ Notificación procesada para cita {instance.id}")
     except Exception as e:
         _logger.error(f"❌ Error en señal: {e}")
 
+@receiver(post_delete, sender=Appointment)
+def notify_appointment(sender, instance,**kwargs):
+    try:
+        _logger.info(f"🎯 Signal: Appointment deleted {instance.id}")
+        send_appointment_notification(instance, "appointment.deleted")
+        _logger.info(f"✅ Notificación procesada para la eliminacion de la cita {instance.id}")
+    except Exception as e:
+        _logger.error(f"❌ Error en señal: {e}")
 
 @receiver(post_save, sender=WorkingHours)
 def set_boolean_working_hours_true(sender, instance, created, **kwargs):

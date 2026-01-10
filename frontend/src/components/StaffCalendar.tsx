@@ -15,6 +15,7 @@ import {
 import { useAppointments } from "@/hooks/useAppointment";
 import { useAuth } from "@/hooks/useAuth";
 
+
 interface Appointment {
   id: number;
   client: string;
@@ -52,7 +53,7 @@ export function StaffCalendar({
   const [appointmentDelete, setAppointmentDelete] = useState<any>(null);
 
   const { deleteAppointment } = useAppointments();
-  const { csrfToken } = useAuth();
+  const { csrfToken,user } = useAuth();
 
   // Convertimos citas a eventos del calendario
   const events = appointments
@@ -138,12 +139,14 @@ export function StaffCalendar({
             </div>
 
             <div className="mt-6 flex justify-end gap-2">
+              {user.group ==="Admins" && (
               <button
                 className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
                 onClick={() => setAppointmentDelete(selectedEvent)}
               >
                 Delete
               </button>
+              )}
               <button
                 className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition"
                 onClick={() => setSelectedEvent(null)}

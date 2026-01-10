@@ -5,32 +5,29 @@ from appointment.notifications.sse import add_notification_to_queue
 logger = logging.getLogger(__name__)
 
 
-def send_appointment_notification(appointment_id):
+def send_appointment_notification(appointment, notification_type:str):
     """Envía notificación de nueva cita"""
-    from appointment.models import Appointment, Notification
+    from appointment.models import Notification
     from django.contrib.auth import get_user_model
     from django.contrib.auth.models import Group
 
     try:
-        appointment = Appointment.objects.get(id=appointment_id)
         User = get_user_model()
 
         staff_user = appointment.staff_member.user
 
         # Obtener grupo admins
         try:
-            admin_group = Group.objects.get(name='A'
-                                                 ''
-                                                 'dmins')
+            admin_group = Group.objects.get(name='Admins')
             admins = admin_group.user_set.all()
         except Group.DoesNotExist:
-            logger.warning("El grupo 'admins' no existe")
+            logger.warning("El grupo 'Admins' no existe")
             admins = User.objects.none()
 
         recipients = [staff_user] + list(admins)
-        logger.debug("Recipients: {}".format(recipients))
+        print("Recipients: {}".format(recipients))
         notification_data = {
-            "type": "appointment_created",
+            "type": notification_type,
             "appointment_id": appointment.id,
             "client": f"{appointment.client.first_name} {appointment.client.last_name}",
             "service": appointment.service.name,
