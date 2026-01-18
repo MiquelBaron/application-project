@@ -16,6 +16,8 @@ from django.utils.dateparse import parse_date
 from django.utils.timezone import localdate, now
 
 from appointment.domain.appointments import services as appointment_services
+from appointment.notifications.tasks import send_appointment_notification
+
 
 @login_required
 def list_appointments(request):
@@ -31,11 +33,12 @@ def list_appointments(request):
 
         try:
             payload = json.loads(request.body)
-            appointment_id = appointment_services.create_appointment(
+            appointment = appointment_services.create_appointment(
                 payload=payload,
                 created_by=user,
             )
-            return JsonResponse({"success": True, "appointment_id": appointment_id})
+            send_appointment_notification(appointment, "appointment.created")
+            return JsonResponse({"success": True, "appointment_id": appointment.id})
 
         except ValueError as e:
             return HttpResponseBadRequest(str(e))
@@ -66,6 +69,7 @@ def appointment_detail(request, appointment_id):
             appointment_services.delete_appointment(
                 appointment_id, user
             )
+            #send_appointment_notification(appointment_id, "appointment.deleted")
             return JsonResponse({"success": True})
 
     except PermissionError as e:

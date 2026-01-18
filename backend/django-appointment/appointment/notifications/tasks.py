@@ -10,7 +10,7 @@ def send_appointment_notification(appointment, notification_type:str):
     from appointment.models import Notification
     from django.contrib.auth import get_user_model
     from django.contrib.auth.models import Group
-
+    print("Send appointment notification: "+ notification_type)
     try:
         User = get_user_model()
 

@@ -5,6 +5,7 @@ domain/appointments/service.py
 
 from datetime import datetime
 
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.timezone import now
@@ -43,7 +44,7 @@ def list_appointments_for_user(user):
     ]
 
 
-def create_appointment(*, payload: dict, created_by):
+def create_appointment(*, payload: dict, created_by) -> Appointment:
     try:
         staff = StaffMember.objects.get(user__id=payload["staff_id"])
         service = Service.objects.get(id=payload["service_id"])
@@ -65,7 +66,7 @@ def create_appointment(*, payload: dict, created_by):
             additional_info=payload.get("additional_info", ""),
         )
 
-        return appointment.id
+        return appointment
 
     except Exception as e:
         raise ValueError(str(e))
@@ -129,11 +130,9 @@ def update_appointment(appointment_id, payload, user):
 
     appointment.save()
 
-
 def delete_appointment(appointment_id, user):
-    if not user.is_superuser:
+    if not user.is_superuser and not user.has_perm("appointment.delete_appointment"):
         raise PermissionError("Only admins can delete appointments")
-
     Appointment.objects.filter(id=appointment_id).delete()
 
 def count_appointments_between(start_date, end_date):

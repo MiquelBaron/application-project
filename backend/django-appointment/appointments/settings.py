@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "appointment",
+    "appointment.apps.AppointmentConfig",
     "corsheaders",
     "guardian",
     #'django_q',

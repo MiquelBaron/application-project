@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useClients } from "@/hooks/useClients";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, User, MoreHorizontal, FileText, Eye, Edit, Trash2, X } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MedicalHistoryForm } from "@/components/MedicalHistoryForm";
+import { useClients, Client } from "@/hooks/useClients";
 import { useReport } from "@/hooks/useReport";
+
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent
+} from "@/components/ui/card";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -20,31 +27,18 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogAction
 } from "@/components/ui/alert-dialog";
 
-/* ------------------ TYPES ------------------ */
-export interface Client {
-  id?: number;
-  source?: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  extra_info?: string;
-  date_of_birth?: string | null;
-  gender?: "M" | "F" | "O";
-  address?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Search, User, MoreHorizontal, FileText, Eye, Edit, Trash2, X } from "lucide-react";
+import { MedicalHistoryForm } from "@/components/MedicalHistoryForm";
 
 /* ------------------ ZOD SCHEMA ------------------ */
-const newClientSchema = z.object({
-  first_name: z.string().min(1),
-  last_name: z.string().min(1),
-  email: z.string().email(),
-  phone_number: z.string().regex(/^\+34\d{9}$/),
+const clientSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email"),
+  phone_number: z.string().regex(/^\+34\d{9}$/, "Phone must be +34XXXXXXXXX"),
   address: z.string().optional(),
   date_of_birth: z.string().optional(),
   gender: z.enum(["M", "F", "O"]).optional(),
@@ -73,7 +67,7 @@ const formatGender = (gender?: "M" | "F" | "O") => {
 export default function Customers() {
   const { exportMedicalHistory } = useReport();
   const { csrfToken, isAuthenticated, user } = useAuth();
-  const { clients, createClient, updateClient, getClientById,deleteClient, error, loading } = useClients(csrfToken);
+  const { clients, createClient, updateClient, getClientById, deleteClient, error, loading } = useClients(csrfToken);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -85,20 +79,25 @@ export default function Customers() {
   const [viewLoading, setViewLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  const [ clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
-  /* ------------------ FORM ------------------ */
-  const { register, handleSubmit, setValue } = useForm<Client>({
-    resolver: zodResolver(newClientSchema),
-    mode: "onChange",
+  /* ------------------ FORMS ------------------ */
+  const newClientForm = useForm<Client>({
+    resolver: zodResolver(clientSchema),
     defaultValues: { phone_number: "+34" },
+    mode: "onChange",
+  });
+
+  const editClientForm = useForm<Client>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: { phone_number: "+34" },
+    mode: "onChange",
   });
 
   /* ------------------ HELPERS ------------------ */
-  const openMedicalHistory = (client: Client) => {
-    setSelectedClient(client);
-    setModalOpen(true);
-  };
+  const filteredClients = clients.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const openViewClient = async (clientId: number) => {
     try {
@@ -108,10 +107,8 @@ export default function Customers() {
         const clientData = data.client ?? data;
         setViewClient(clientData);
 
-        // populate form
-        Object.entries(clientData).forEach(([key, value]) => {
-          setValue(key as keyof Client, value as any);
-        });
+        // Reset form with fetched data
+        editClientForm.reset(clientData);
 
         setViewClientModalOpen(true);
         setEditMode(false);
@@ -120,12 +117,6 @@ export default function Customers() {
       setViewLoading(false);
     }
   };
-
-  
-  
-  const filteredClients = clients.filter(c =>
-    `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (!isAuthenticated) return <p className="text-center text-red-500">Please login to see clients.</p>;
   if (loading) return <p className="text-center text-muted-foreground">Loading clients...</p>;
@@ -140,7 +131,7 @@ export default function Customers() {
           <h1 className="text-3xl font-bold">Clients</h1>
           <p className="text-muted-foreground">Manage and view all your clients</p>
         </div>
-        <Button onClick={() => setNewClientModalOpen(true)}>
+        <Button onClick={() => newClientForm.reset({ phone_number: "+34" }) || setNewClientModalOpen(true)}>
           <User className="mr-2 h-4 w-4" /> New Client
         </Button>
       </div>
@@ -191,7 +182,7 @@ export default function Customers() {
                       <TableCell>{client.phone_number}</TableCell>
                       <TableCell>{client.email}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="secondary" onClick={() => openMedicalHistory(client)}>
+                        <Button size="sm" variant="secondary" onClick={() => setSelectedClient(client) || setModalOpen(true)}>
                           <FileText className="h-4 w-4 mr-2" /> Medical History
                         </Button>
                         <DropdownMenu>
@@ -211,9 +202,7 @@ export default function Customers() {
                               <DropdownMenuItem className="text-destructive" onClick={()=>setClientToDelete(client)}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
-                        )}
-
-                            
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -226,50 +215,36 @@ export default function Customers() {
         </CardContent>
       </Card>
 
+      {/* DELETE CLIENT ALERT */}
       {clientToDelete && (
         <AlertDialog
-    open
-    onOpenChange={(open) => {
-      if (!open) setClientToDelete(null);
-    }}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete client</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete{" "}
-                  <span className="font-semibold">
-                    {clientToDelete.first_name} {clientToDelete.last_name}
-                  </span>
-                  ?
-                  <br />
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-                <AlertDialogAction
-                  className="bg-destructive"
-                  onClick={async () => {
-                    await deleteClient(clientToDelete.id!);
-                    setClientToDelete(null);
-                  }}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          open
+          onOpenChange={(open) => { if (!open) setClientToDelete(null); }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete client</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{clientToDelete.first_name} {clientToDelete.last_name}</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive"
+                onClick={async () => { await deleteClient(clientToDelete.id!); setClientToDelete(null); }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
 
-      {/* VIEW CLIENT MODAL */}
+      {/* VIEW / EDIT CLIENT MODAL */}
       {viewClientModalOpen && viewClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <Card className="relative w-full max-w-md">
-
-            {/* Absolute buttons top-right */}
             <div className="absolute top-4 right-4 flex gap-2">
               <Edit
                 className="h-5 w-5 text-blue-500 cursor-pointer hover:text-blue-600"
@@ -277,11 +252,7 @@ export default function Customers() {
               />
               <X
                 className="h-5 w-5 text-gray-500 cursor-pointer hover:text-black"
-                onClick={() => {
-                  setViewClientModalOpen(false);
-                  setViewClient(null);
-                  setEditMode(false);
-                }}
+                onClick={() => { setViewClientModalOpen(false); setViewClient(null); setEditMode(false); }}
               />
             </div>
 
@@ -293,29 +264,42 @@ export default function Customers() {
             <CardContent className="space-y-4 text-sm">
               {editMode ? (
                 <form
-                  onSubmit={handleSubmit(async (data: Client) => {
+                  onSubmit={editClientForm.handleSubmit(async (data: Client) => {
                     if (!viewClient.id) return;
-                    await updateClient(viewClient.id, { ...viewClient, ...data });
+                    await updateClient(viewClient.id, data);
                     setEditMode(false);
                     await openViewClient(viewClient.id);
                   })}
                   className="space-y-2"
                 >
                   <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="First Name" {...register("first_name")} />
-                    <Input placeholder="Last Name" {...register("last_name")} />
+                    <div>
+                      <Input placeholder="First Name" {...editClientForm.register("first_name")} />
+                      <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.first_name?.message}</p>
+                    </div>
+                    <div>
+                      <Input placeholder="Last Name" {...editClientForm.register("last_name")} />
+                      <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.last_name?.message}</p>
+                    </div>
                   </div>
-                  <Input placeholder="Email" type="email" {...register("email")} />
-                  <Input placeholder="Phone" {...register("phone_number")} />
-                  <Input placeholder="Address" {...register("address")} />
-                  <Input type="date" {...register("date_of_birth")} />
-                  <select {...register("gender")} className="w-full border rounded px-3 py-2 text-sm">
+                  <Input placeholder="Email" type="email" {...editClientForm.register("email")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.email?.message}</p>
+                  <Input placeholder="Phone" {...editClientForm.register("phone_number")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.phone_number?.message}</p>
+                  <Input placeholder="Address" {...editClientForm.register("address")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.address?.message}</p>
+                  <Input type="date" {...editClientForm.register("date_of_birth")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.date_of_birth?.message}</p>
+                  <select {...editClientForm.register("gender")} className="w-full border rounded px-3 py-2 text-sm">
                     <option value="" disabled>Select Gender</option>
                     <option value="M">Male</option>
                     <option value="F">Female</option>
                     <option value="O">Other</option>
                   </select>
-                  <Input placeholder="Extra Info" {...register("extra_info")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.gender?.message}</p>
+                  <Input placeholder="Extra Info" {...editClientForm.register("extra_info")} />
+                  <p className="text-xs text-red-500 mt-1">{editClientForm.formState.errors.extra_info?.message}</p>
+
                   <div className="mt-4 flex justify-end gap-2">
                     <Button type="submit">Save</Button>
                   </div>
@@ -351,59 +335,61 @@ export default function Customers() {
         </div>
       )}
 
-      {/* ------------------ NUEVO CLIENTE MODAL ------------------ */}
-{newClientModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <Card className="relative w-full max-w-md">
-
-      {/* Close button */}
-      <X
-        className="absolute top-4 right-4 h-5 w-5 text-gray-500 cursor-pointer hover:text-black"
-        onClick={() => setNewClientModalOpen(false)}
-      />
-
-      <CardHeader>
-        <CardTitle>New Client</CardTitle>
-        <CardDescription>Fill in the client information</CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-            <form
-              onSubmit={handleSubmit(async (data: Client) => {
-                try {
-                  const newClient = await createClient(data);
-                  setNewClientModalOpen(false);
-                } catch (err) {
-                  console.error("Error creating client:", err);
-                }
-              })}
-              className="space-y-2"
-            >
-              <div className="grid grid-cols-2 gap-2">
-                <Input placeholder="First Name" {...register("first_name")} />
-                <Input placeholder="Last Name" {...register("last_name")} />
-              </div>
-              <Input placeholder="Email" type="email" {...register("email")} />
-              <Input placeholder="Phone" {...register("phone_number")} />
-              <Input placeholder="Address" {...register("address")} />
-              <Input type="date" {...register("date_of_birth")} />
-              <select {...register("gender")} className="w-full border rounded px-3 py-2 text-sm">
-                <option value="" disabled>Select Gender</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-                <option value="O">Other</option>
-              </select>
-              <Input placeholder="Extra Info" {...register("extra_info")} />
-              <div className="mt-4 flex justify-end gap-2">
-                <Button type="submit">Create</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    )}
-
-
+      {/* NEW CLIENT MODAL */}
+      {newClientModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="relative w-full max-w-md">
+            <X
+              className="absolute top-4 right-4 h-5 w-5 text-gray-500 cursor-pointer hover:text-black"
+              onClick={() => setNewClientModalOpen(false)}
+            />
+            <CardHeader>
+              <CardTitle>New Client</CardTitle>
+              <CardDescription>Fill in the client information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form
+                onSubmit={newClientForm.handleSubmit(async (data: Client) => {
+                  try {
+                    await createClient(data);
+                    setNewClientModalOpen(false);
+                  } catch (err) {
+                    console.error("Error creating client:", err);
+                  }
+                })}
+                className="space-y-2"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Input placeholder="First Name" {...newClientForm.register("first_name")} />
+                    <p className="text-xs text-red-500 mt-1">{newClientForm.formState.errors.first_name?.message}</p>
+                  </div>
+                  <div>
+                    <Input placeholder="Last Name" {...newClientForm.register("last_name")} />
+                    <p className="text-xs text-red-500 mt-1">{newClientForm.formState.errors.last_name?.message}</p>
+                  </div>
+                </div>
+                <Input placeholder="Email" type="email" {...newClientForm.register("email")} />
+                <p className="text-xs text-red-500 mt-1">{newClientForm.formState.errors.email?.message}</p>
+                <Input placeholder="Phone (+34XXXXXXXXX)" {...newClientForm.register("phone_number")} />
+                <p className="text-xs text-red-500 mt-1">{newClientForm.formState.errors.phone_number?.message}</p>
+                <Input placeholder="Address" {...newClientForm.register("address")} />
+                <Input type="date" {...newClientForm.register("date_of_birth")} />
+                <select {...newClientForm.register("gender")} className="w-full border rounded px-3 py-2 text-sm">
+                  <option value="" disabled>Select Gender</option>
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                  <option value="O">Other</option>
+                </select>
+                <Input placeholder="Extra Info" {...newClientForm.register("extra_info")} />
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button type="submit">Create</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
