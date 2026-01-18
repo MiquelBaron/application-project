@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, time, date
 
 from django.contrib.auth.models import User
 from appointment.models import StaffMember, Service, WorkingHours, Appointment, Client
-from appointment.core.api_helpers import get_availability_for_service_across_staffs
+from appointment.domain.appointments.availability import get_availability_for_service_across_staffs
 
 
 @pytest.mark.django_db

@@ -49,7 +49,7 @@ export function useServices(csrfToken?: string) {
   // Create a new service
   const createService = async (data: Partial<Service>) => {
     try {
-      const res = await fetch(`${baseUrl}create/`, {
+      const res = await fetch(`${baseUrl}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -72,7 +72,7 @@ export function useServices(csrfToken?: string) {
   // Edit a service
   const editService = async (id: number, data: Partial<Service>) => {
     try {
-      const res = await fetch(`${baseUrl}${id}/edit/`, {
+      const res = await fetch(`${baseUrl}${id}/`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -95,7 +95,7 @@ export function useServices(csrfToken?: string) {
   // Delete a service
   const deleteService = async (id: number) => {
     try {
-      const res = await fetch(`${baseUrl}${id}/delete/`, {
+      const res = await fetch(`${baseUrl}${id}/`, {
         method: "DELETE",
         credentials: "include",
         headers: {

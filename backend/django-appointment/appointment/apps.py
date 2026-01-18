@@ -1,5 +1,5 @@
 # apps.py
-# Path: appointment/apps.py
+# Path: appointments/apps.py
 
 
 from django.apps import AppConfig

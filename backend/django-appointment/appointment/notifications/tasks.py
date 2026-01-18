@@ -1,4 +1,4 @@
-# appointment/notifications/tasks.py
+# appointments/notifications/tasks.py
 import logging
 from appointment.notifications.sse import add_notification_to_queue
 

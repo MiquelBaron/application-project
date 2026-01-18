@@ -59,3 +59,38 @@ def serialize_client(client: Client) -> Dict[str, Any]:
         "created_at": client.created_at.isoformat(),
         "updated_at": client.updated_at.isoformat(),
     }
+
+import json
+from typing import Dict, List
+from django.forms.models import model_to_dict
+from django.db import IntegrityError
+from appointment.models import Client, MedicalRecord
+
+def get_clients_list() -> List[Dict]:
+    clients = Client.objects.all().values('id', 'first_name', 'last_name', 'phone_number', 'email')
+    return [{**c, 'phone_number': str(c['phone_number'])} for c in clients]
+
+def create_client(data: Dict) -> Client:
+    try:
+        client = Client.objects.create(
+            source=data.get("source", "other"),
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            phone_number=data["phone_number"],
+            email=data["email"],
+            extra_info=data.get("extra_info", ""),
+            date_of_birth=data.get("date_of_birth") or None,
+            gender=data.get("gender"),
+            address=data.get("address"),
+        )
+        return client
+    except KeyError as e:
+        raise ValueError(f"Missing client field: {e}")
+    except IntegrityError:
+        raise ValueError("Phone number already exists")
+
+def get_medical_record_for_client(client_id:int) -> dict:
+    medical_record = MedicalRecord.objects.filter(client__id=client_id).first()
+    if not medical_record:
+        return {}
+    return model_to_dict(medical_record)

@@ -1,5 +1,5 @@
 # forms.py
-# Path: appointment/forms.py
+# Path: appointments/forms.py
 
 """
 Author: Adams Pierre David
@@ -10,11 +10,10 @@ from django import forms
 from django.utils.translation import gettext as _
 from phonenumber_field.formfields import SplitPhoneNumberField
 
-from .core.models import (
+from .models import (
     Appointment, DayOff, Service, StaffMember,
     WorkingHours
 )
-from .core.db_helpers import get_user_model
 from .utils.validators import not_in_the_past
 
 
@@ -69,19 +68,8 @@ class PersonalInformationForm(forms.Form):
         self.user = kwargs.pop('user', None)  # pop the user from the kwargs
         super().__init__(*args, **kwargs)
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if self.user:
-            if self.user.email == email:
-                return email
-            queryset = get_user_model().objects.exclude(pk=self.user.pk)
-        else:
-            queryset = get_user_model().objects.all()
 
-        if queryset.filter(email=email).exists():
-            raise forms.ValidationError(_("This email is already taken."))
-
-        return email
+        return
 
 
 class StaffAppointmentInformationForm(forms.ModelForm):

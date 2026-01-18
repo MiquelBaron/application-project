@@ -1,5 +1,5 @@
 # admin.py
-# Path: appointment/admin.py
+# Path: appointments/admin.py
 
 """
 Author: Miquel Barón
@@ -181,7 +181,6 @@ class WorkingHoursForm(forms.ModelForm):
         days = self.cleaned_data['day_of_week']
         return [int(day) for day in days]
 
-from .chatbot_api.forms import *
 
 @admin.register(WorkingHours)
 class WorkingHoursAdmin(admin.ModelAdmin):

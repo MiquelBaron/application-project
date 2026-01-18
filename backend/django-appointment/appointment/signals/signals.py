@@ -2,9 +2,8 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from appointment.core.db_helpers import WorkingHours
 from appointment.logger_config import get_logger
-from appointment.models import Appointment
+from appointment.models import Appointment, WorkingHours
 from appointment.notifications.tasks import send_appointment_notification
 
 _logger = get_logger(__name__)

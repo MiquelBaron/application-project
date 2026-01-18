@@ -1,5 +1,5 @@
-# session.py
-# Path: appointment/utils/session.py
+'''# session.py
+# Path: appointments/utils/session.py
 
 """
 Author: Adams Pierre David
@@ -29,10 +29,10 @@ def handle_existing_email(request, client_data, appointment_data, appointment_re
     in the session.
 
     :param request: The Django HttpRequest object.
-    :param client_data: The data of the client for the appointment.
-    :param appointment_data: The data of the appointment.
-    :param appointment_request_id: The ID of the appointment request.
-    :param id_request: The unique ID for the appointment request.
+    :param client_data: The data of the client for the appointments.
+    :param appointment_data: The data of the appointments.
+    :param appointment_request_id: The ID of the appointments request.
+    :param id_request: The unique ID for the appointments request.
     :return: The redirect response to enter the verification code.
     """
     logger.info("Email already in database, saving info in session and redirecting to enter verification code")
@@ -57,7 +57,7 @@ def handle_existing_email(request, client_data, appointment_data, appointment_re
     request.session.modified = True
     message = _("Email '{email}' already exists. Login to your account.").format(email=client_data['email'])
     messages.error(request, message)
-    return redirect('appointment:enter_verification_code', appointment_request_id=appointment_request_id,
+    return redirect('appointments:enter_verification_code', appointment_request_id=appointment_request_id,
                     id_request=id_request)
 
 
@@ -71,16 +71,16 @@ def handle_email_change(request, user, email):
     request.session['email'] = email
     request.session['old_email'] = user.email
     request.session.modified = True
-    return redirect('appointment:email_change_verification_code')
+    return redirect('appointments:email_change_verification_code')
 
 
 def get_appointment_data_from_session(request):
     """
-    Get the appointment data from the session variables.
+    Get the appointments data from the session variables.
     Retrieves the phone, want_reminder, address, and additional_info stored in the session.
 
     :param request: The Django HttpRequest object.
-    :return: The appointment data retrieved from the session.
+    :return: The appointments data retrieved from the session.
     """
     phone = request.session.get('phone')
     phone_obj = PhoneNumber.from_string(phone)
@@ -94,3 +94,4 @@ def get_appointment_data_from_session(request):
         'address': address,
         'additional_info': additional_info,
     }
+'''

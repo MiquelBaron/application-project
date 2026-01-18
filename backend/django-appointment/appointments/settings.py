@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "appointment.apps.AppointmentConfig",
+    "appointment",
     "corsheaders",
     "guardian",
     #'django_q',
@@ -59,7 +59,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "appointment.core.middleware.JsonExceptionMiddleware"
 
 ]
 
@@ -85,7 +84,7 @@ ROOT_URLCONF = "appointments.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'appointment/templates'],
+        "DIRS": [BASE_DIR / 'appointments/templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

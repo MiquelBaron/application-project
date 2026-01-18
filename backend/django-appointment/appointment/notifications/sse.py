@@ -1,4 +1,4 @@
-# appointment/notifications/sse.py
+# appointments/notifications/sse.py
 import json
 import time
 import threading

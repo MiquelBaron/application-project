@@ -1,5 +1,5 @@
 # settings.py
-# Path: appointment/settings.py
+# Path: appointments/settings.py
 
 from django.conf import settings
 from django.conf.global_settings import DEFAULT_FROM_EMAIL

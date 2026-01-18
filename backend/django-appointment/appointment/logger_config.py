@@ -1,5 +1,5 @@
 # logger_config.py
-# Path: appointment/logger_config.py
+# Path: appointments/logger_config.py
 
 """
 Author: Adams Pierre David

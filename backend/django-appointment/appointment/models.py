@@ -1,5 +1,5 @@
 # models.py
-# Path: appointment/models.py
+# Path: appointments/models.py
 
 
 import datetime
@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .core.date_time import convert_minutes_in_human_readable_format, get_timestamp, get_weekday_num, \
+from appointment.utils.date_time import get_timestamp, get_weekday_num, \
     time_difference, combine_date_and_time
 
 PAYMENT_TYPES = (
@@ -145,7 +145,7 @@ class StaffMember(models.Model):
     services_offered = models.ManyToManyField(Service, related_name='staff_members', blank=True)
     slot_duration = models.PositiveIntegerField(
         null=True, blank=True, default=30,
-        help_text=_("Intervals in which clients can book and appointment. Default 30")
+        help_text=_("Intervals in which clients can book and appointments. Default 30")
     )
     lead_time = models.TimeField(
         null=True, blank=True,
@@ -159,7 +159,7 @@ class StaffMember(models.Model):
         blank=True, null=True,
         help_text=_("Time between now and the first available slot for the current day (doesn't affect tomorrow). "
                     "e.g: If you start working at 9:00 AM and the current time is 8:30 AM and you set it to 30 "
-                    "minutes, the first available slot will be at 9:00 AM. If you set the appointment buffer time to "
+                    "minutes, the first available slot will be at 9:00 AM. If you set the appointments buffer time to "
                     "60 minutes, the first available slot will be at 9:30 AM.")
     )
 
@@ -178,10 +178,6 @@ class StaffMember(models.Model):
     def get_slot_duration(self):
         config = Config.objects.first()
         return self.slot_duration or (config.slot_duration if config else 0)
-
-    def get_slot_duration_text(self):
-        slot_duration = self.get_slot_duration()
-        return convert_minutes_in_human_readable_format(slot_duration)
 
     def get_lead_time(self):
         config = Config.objects.first()
@@ -239,9 +235,6 @@ class StaffMember(models.Model):
         config = Config.objects.first()
         return self.appointment_buffer_time or (config.appointment_buffer_time if config else 0)
 
-    def get_appointment_buffer_time_text(self):
-        # convert buffer time (which is in minutes) in day hours minutes if necessary
-        return convert_minutes_in_human_readable_format(self.get_appointment_buffer_time())
 
     def get_days_off(self):
         return DayOff.objects.filter(staff_member=self)
@@ -264,7 +257,7 @@ class StaffMember(models.Model):
 
 class Appointment(models.Model):
     """
-    Represents an appointment made by a client. It is created when the client confirms the appointment request.
+    Represents an appointments made by a client. It is created when the client confirms the appointments request.
 
     """
     client = models.ForeignKey(
@@ -293,7 +286,7 @@ class Appointment(models.Model):
             models.Index(fields=['staff_member', 'date']),
         ]
         permissions = [
-            ("can_view_sensitive_info", "Can view sensitive appointment information"),
+            ("can_view_sensitive_info", "Can view sensitive appointments information"),
         ]
     def __str__(self):
         start_dt = combine_date_and_time(self.date, self.start_time)
@@ -366,7 +359,7 @@ class Appointment(models.Model):
         self.save()
 
     def get_absolute_url(self, request=None):
-        url = reverse('appointment:display_appointment', args=[str(self.id)])
+        url = reverse('appointments:display_appointment', args=[str(self.id)])
         return request.build_absolute_uri(url) if request else url
 
     @staticmethod
@@ -383,21 +376,21 @@ class Appointment(models.Model):
 
         # Check if the start time falls within the staff member's working hours
         if not (working_hours.start_time <= start_time.time() <= working_hours.end_time):
-            message = _("The appointment start time is outside of {staff_member}'s working hours.").format(
+            message = _("The appointments start time is outside of {staff_member}'s working hours.").format(
                 staff_member=sm_name)
             return False, message
 
-        # Check if the staff member already has an appointment on the given date and time
+        # Check if the staff member already has an appointments on the given date and time
         # Using prefetch_related to reduce DB hits when accessing related objects
         appt_list = Appointment.objects.filter(staff_member=staff_member,
                                                date=appt_date).exclude(
             id=current_appointment_id).prefetch_related('appointment_request')
         for appt in appt_list:
             if appt.start_time <= start_time.time() <= appt.end_time:
-                message = _("{staff_member} already has an appointment at this time.").format(staff_member=sm_name)
+                message = _("{staff_member} already has an appointments at this time.").format(staff_member=sm_name)
                 return False, message
 
-        # Check if the staff member has a day off on the appointment's date
+        # Check if the staff member has a day off on the appointments's date
         days_off = DayOff.objects.filter(staff_member=staff_member, start_date__lte=appt_date, end_date__gte=appt_date)
         if days_off.exists():
             message = _("{staff_member} has a day off on this date.").format(staff_member=sm_name)
@@ -423,13 +416,13 @@ class Appointment(models.Model):
 
 class Config(models.Model):
     """
-    Represents configuration settings for the appointment system. There can only be one Config object in the database.
+    Represents configuration settings for the appointments system. There can only be one Config object in the database.
     If you want to change the settings, you must edit the existing Config object.
 
     """
     slot_duration = models.PositiveIntegerField(
         null=True,
-        help_text=_("Minimum time for an appointment in minutes, recommended 30."),
+        help_text=_("Minimum time for an appointments in minutes, recommended 30."),
     )
     lead_time = models.TimeField(
         null=True,
@@ -451,15 +444,15 @@ class Config(models.Model):
     app_offered_by_label = models.CharField(
         max_length=255,
         default=_("Offered by"),
-        help_text=_("Label for `Offered by` on the appointment page")
+        help_text=_("Label for `Offered by` on the appointments page")
     )
     default_reschedule_limit = models.PositiveIntegerField(
         default=3,
-        help_text=_("Default maximum number of times an appointment can be rescheduled across all services.")
+        help_text=_("Default maximum number of times an appointments can be rescheduled across all service.")
     )
     allow_staff_change_on_reschedule = models.BooleanField(
         default=True,
-        help_text=_("Allows clients to change the staff member when rescheduling an appointment.")
+        help_text=_("Allows clients to change the staff member when rescheduling an appointments.")
     )
 
     # meta data

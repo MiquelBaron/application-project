@@ -1,13 +1,16 @@
-from django.urls import path
-from .views_admin import *
-from .views.admin_views import *
-from .views.auth import *
-from .views.views import *
-from appointment.notifications.sse import notification_stream
+from appointment.api.appointments.views import *
+from appointment.api.auth.views import *
+from appointment.api.availability.views import *
+from appointment.api.clients.views import *
+from appointment.api.medical.views import *
+from appointment.api.reports.views import *
+from appointment.api.services.views import *
+from appointment.api.staff.views import *
+from appointment.api.daysoff.views import *
+from django.urls import  path
+from appointment.notifications.sse import *
 
-staff_member_view = StaffMemberView.as_view()
-service_view = ServiceView.as_view()
-medical_view = MedicalRecordView.as_view()
+
 
 urlpatterns = [
     # Auth
@@ -17,19 +20,16 @@ urlpatterns = [
 
     # Staff Members
     path('staffs/', new_staff, name='staffs_list'),
-    path('staffs/<int:staff_id>/', get_staff_detail, name='staff_detail'),  # BaseModelView
+    path('staffs/<int:staff_id>/', staff_detail, name='staff_detail'),  #
     path('staffs/availability/<int:staff_id>/<int:service_id>/<str:day_str>/', availability_for_staff ,name='staff_availability'),
-    path('staffs/<int:staff_id>/services/', set_staff_services, name='staff_services'),
+    path('staffs/<int:staff_id>/services/', set_staff_services_view, name='staff_services'),
 
     # Services
     path('services/', services_list, name='services_list'),
-    path('services/<int:object_id>/', service_view, name='service_detail'),
-    path('services/create/', service_view, name='service_create'),  # POST
-    path('services/<int:object_id>/edit/', service_view, name='service_edit'),  # PUT
-    path('services/<int:object_id>/delete/', service_view, name='service_delete'),  # DELETE
+    path('services/<int:service_id>/', service_detail, name='service_detail'),
 
     # Staffs by service
-    path('staffs-by-service/<int:service_id>/', get_staffs_by_service, name='staffs_by_service'),
+    path('staffs-by-service/<int:service_id>/', staffs_by_service, name='staffs_by_service'),
 
     # Appointments
     path('appointments/', list_appointments, name='appointments_list'),  # GET & POST
@@ -39,7 +39,7 @@ urlpatterns = [
     path('appointments/recent/', appointments_recent, name='appointments_recent'),
 
     # Availability
-    path('availability/<str:service_name>/<str:date_str>/', availability, name='availability'),
+    path('availability/<str:service_name>/<str:date_str>/', availability_for_service, name='availability'),
 
     # Clients
     path('clients/count/', clients_count, name='clients_count'),
@@ -51,10 +51,9 @@ urlpatterns = [
     path('working_hours/staff/<int:staff_id>/', set_working_hours, name='working_hours_list'),
 
     # Medical records
-    path('medical_records/', MedicalRecordView.as_view(), name='medical_record_create'),
-    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_edit'),
-    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_delete'),
-    path('medical_records/<int:object_id>/', MedicalRecordView.as_view(), name='medical_record_detail'),
+    path('medical_records/', create_medical_record, name='medical_record_create'),
+    path('medical_records/<int:record_id>/', client_medical_record_view, name='medical_record_edit'),
+
 
 
     # Days off
@@ -68,3 +67,5 @@ urlpatterns = [
     path('stream/', notification_stream, name='notification-stream'),
 
 ]
+
+

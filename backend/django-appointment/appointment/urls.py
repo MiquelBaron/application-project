@@ -1,5 +1,5 @@
 # urls.py
-# Path: appointment/urls.py
+# Path: appointments/urls.py
 
 """
 Author: Adams Pierre David
@@ -14,11 +14,10 @@ from django.http import JsonResponse
 def test_no_auth(request):
     return JsonResponse({"ok": True, "user": str(request.user)})
 
-app_name = 'appointment'
+app_name = 'appointments'
 
 urlpatterns = [
-    path("chatbot/", include("appointment.chatbot_api.urls")),
-    path("api/", include("appointment.web_api.urls")),
+    path("api/", include("appointment.api.urls")),
     path("test/", test_no_auth, name="test"),
 ]
 

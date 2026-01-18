@@ -127,18 +127,25 @@ export function useClients(csrfToken: string | null) {
   }
 
   const deleteClient = async(client_id:number) => {
-    const res = await fetch(`${baseUrl}${client_id}/`,{
-       method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        }
-    });
+  if (!csrfToken) throw new Error("CSRF token missing");
 
-    if(!res.ok){throw new Error("Error deleting client")}
-    await fetchClients();
+  const res = await fetch(`${baseUrl}${client_id}/`,{
+     method: "DELETE",
+     credentials: "include",
+     headers: {
+       "Content-Type": "application/json",
+       "X-CSRFToken": csrfToken,
+     }
+  });
 
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`Error deleting client: ${res.status} ${text}`);
   }
+
+  await fetchClients();
+}
+
 
   return {
     clients,
