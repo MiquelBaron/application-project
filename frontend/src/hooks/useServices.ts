@@ -15,7 +15,7 @@ export function useServices(csrfToken?: string) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const baseUrl = "http://localhost:8001/v1/api/services/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/services/"; 
 
   // Fetch all services
   const fetchServices = async () => {

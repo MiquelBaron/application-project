@@ -48,7 +48,7 @@ urlpatterns = [
     path('clients/', clients_post_get, name='clients_post_get'),
 
     # Working hours
-    path('working_hours/staff/<int:staff_id>/', set_working_hours, name='working_hours_list'),
+    path('workinghours/staff/<int:staff_id>/', set_working_hours, name='working_hours_list'),
 
     # Medical records
     path('medical_records/', create_medical_record, name='medical_record_create'),

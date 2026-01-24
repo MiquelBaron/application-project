@@ -8,7 +8,7 @@ export function useAvailability(
   const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const baseUrl = import.meta.env.VITE_API_URL;
   useEffect(() => {
     if (!staffId || !serviceId || !day) return;
 
@@ -16,13 +16,13 @@ export function useAvailability(
     setError(null);
 
     fetch(
-      `http://localhost:8001/v1/api/staffs/availability/${staffId}/${serviceId}/${day}/`,
+      `${baseUrl}/staffs/availability/${staffId}/${serviceId}/${day}/`,
       {
         method: "GET",
         headers: {
           "Accept": "application/json",
         },
-        credentials: "include", // <- importante, envía la cookie de sesión
+        credentials: "include",
       }
     )
       .then(async (res) => {

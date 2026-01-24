@@ -1,67 +1,62 @@
-# appointments/notifications/sse.py
 import json
 import time
-import threading
+from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET
-import logging
 
-logger = logging.getLogger(__name__)
+# Diccionario global en dev
+DEV_QUEUE = {}
 
-# Almacenamiento en memoria para SSE
-user_messages = {}
-messages_lock = threading.Lock()
+if settings.REDIS_HOST:
+    import redis
+    r = redis.Redis(
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        password=getattr(settings, "REDIS_PASSWORD", None),
+        db=0,
+        decode_responses=True
+    )
+else:
+    r = None  # usaremos DEV_QUEUE en memoria
 
 @require_GET
 @login_required
 def notification_stream(request):
-    """SSE stream - conexiones persistentes"""
-    user_id = request.user.id
-    logger.info(f"🎯 Usuario {user_id} conectado a SSE")
+    user_id = str(request.user.id)
 
     def event_generator():
-        try:
-            # Mensaje de conexión
-            yield f"data: {json.dumps({'type': 'connected', 'user_id': user_id})}\n\n"
+        # mensaje inicial
+        yield f"data: {json.dumps({'type': 'connected', 'user_id': user_id})}\n\n"
 
-            # Mantener conexión
-            while True:
-                user_key = f"user_{user_id}"
-
-                with messages_lock:
-                    if user_key in user_messages and user_messages[user_key]:
-                        message = user_messages[user_key].pop(0)
-                        yield f"data: {json.dumps(message)}\n\n"
-                        logger.info(f"📤 Mensaje enviado a usuario {user_id}")
-                    else:
-                        # Keep-alive
-                        yield ":keep-alive\n\n"
-
+        while True:
+            if r:
+                # Redis
+                message = r.brpop(f"user:{user_id}", timeout=1)
+                if message:
+                    _, data = message
+                    yield f"data: {data}\n\n"
+                else:
+                    yield ":keep-alive\n\n"
+            else:
+                # Dev: diccionario
+                messages = DEV_QUEUE.get(user_id, [])
+                while messages:
+                    yield f"data: {json.dumps(messages.pop(0))}\n\n"
                 time.sleep(1)
-
-        except GeneratorExit:
-            logger.info(f"Usuario {user_id} desconectado")
-        except Exception as e:
-            logger.error(f"❌ Error en SSE: {e}")
+                yield ":keep-alive\n\n"
 
     response = StreamingHttpResponse(
         event_generator(),
-        content_type='text/event-stream'
+        content_type="text/event-stream"
     )
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
 
 def add_notification_to_queue(user_id, message):
-    """Añade notificación a la cola del usuario"""
-    user_key = f"user_{user_id}"
-
-    with messages_lock:
-        if user_key not in user_messages:
-            user_messages[user_key] = []
-
-        user_messages[user_key].append(message)
-        logger.info(f"Notificación en cola para usuario {user_id}")
-
-    return True
+    user_id = str(user_id)
+    if r:
+        r.lpush(f"user:{user_id}", json.dumps(message))
+    else:
+        DEV_QUEUE.setdefault(user_id, []).append(message)

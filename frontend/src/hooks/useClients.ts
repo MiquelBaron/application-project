@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 export function useClients(csrfToken: string | null) {
-  const baseUrl = "http://localhost:8001/v1/api/clients/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/clients/";
 
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

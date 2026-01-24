@@ -8,7 +8,7 @@ interface DayOff {
 }
 
 export function useDaysoff(csrfToken: string) {
-  const baseUrl = "http://localhost:8001/v1/api/daysoff/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/daysoff/";
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 

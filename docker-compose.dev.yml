@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./backend/django-appointment
+      target: development
+    environment:
+      ENV: development
+    volumes:
+      - ./backend/django-appointment:/app
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    environment:
+      NODE_ENV: development
+    args:
+      VITE_API_URL: http://localhost:8000/v1/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"

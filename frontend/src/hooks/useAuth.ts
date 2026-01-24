@@ -10,15 +10,28 @@ type User = {
   id: number;
   username: string;
   group: string;
-  email:string;
+  email: string;
   isSuperuser: boolean;
   staffInfo: StaffInfo | null;
 };
+
+const baseUrl = import.meta.env.VITE_API_URL; // hasta /api
 
 // 🔒 Utilidad para leer cookies de forma segura
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return match ? decodeURIComponent(match[2]) : null;
+}
+
+// Helper centralizado para fetch
+async function apiFetch(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  return fetch(`${baseUrl}${endpoint}`, {
+    credentials: "include",
+    ...options,
+  });
 }
 
 export function useAuth() {
@@ -30,13 +43,10 @@ export function useAuth() {
   useEffect(() => {
     async function checkSession() {
       try {
-        const res = await fetch("http://localhost:8001/v1/api/session/", {
-          credentials: "include",
-        });
+        const res = await apiFetch("/session/"); 
         if (res.ok) {
           const data = await res.json();
 
-          // Transformamos la respuesta para que coincida con TS
           const userData: User = {
             id: data.user_id,
             username: data.username,
@@ -45,7 +55,7 @@ export function useAuth() {
             isSuperuser: data.is_superuser,
             staffInfo: data.services_offered
               ? {
-                  staff_id: data.staff_id || 0, // agrega si lo devuelve
+                  staff_id: data.staff_id || 0,
                   slot_duration: data.slot_duration,
                   services: data.services_offered,
                 }
@@ -69,10 +79,9 @@ export function useAuth() {
   async function login(username: string, password: string) {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8001/v1/api/login/", {
+      const res = await apiFetch("/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
@@ -107,9 +116,8 @@ export function useAuth() {
   async function logout() {
     const csrfToken = getCookie("csrftoken");
 
-    await fetch("http://localhost:8001/v1/api/logout/", {
+    await apiFetch("/logout/", {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
