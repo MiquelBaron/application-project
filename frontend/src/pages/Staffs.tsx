@@ -252,6 +252,7 @@ export default function Staffs() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Slot Duration</TableHead>
@@ -264,6 +265,7 @@ export default function Staffs() {
                   {filteredStaffs.map((staff) => (
                     <TableRow key={staff.id}>
                       <TableCell>{staff.id}</TableCell>
+                      <TableCell>{staff.user_username}</TableCell>
                       <TableCell className="font-medium">{staff.user_first_name} {staff.user_last_name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">

@@ -44,6 +44,7 @@ export function useAuth() {
     async function checkSession() {
       try {
         const res = await apiFetch("/session/"); 
+        console.log("Called session")
         if (res.ok) {
           const data = await res.json();
 
