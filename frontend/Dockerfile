@@ -5,6 +5,11 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
+# Development stage
+FROM base AS development
+EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
 # Stage build
 FROM base AS build
 ARG VITE_API_URL

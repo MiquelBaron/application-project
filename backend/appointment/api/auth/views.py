@@ -3,6 +3,8 @@ from django.http import JsonResponse
 
 def get_session(request):
     user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({"authenticaded":False})
     data = {
         "user_id": user.id,
         "username": user.username,
