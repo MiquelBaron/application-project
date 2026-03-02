@@ -90,4 +90,17 @@ LANGUAGES = (
 
 AUTH_USER_MODEL = 'appointment.User'
 
+# Appointment confirmation email (Resend free tier)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+APPOINTMENT_EMAIL_SENDER = os.environ.get("APPOINTMENT_EMAIL_SENDER", "onboarding@resend.dev")
+APPOINTMENT_EMAILS_ENABLED = os.environ.get("APPOINTMENT_EMAILS_ENABLED", "true").lower() == "true"
+
+# Celery + RabbitMQ
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "rpc://")
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TIMEZONE = TIME_ZONE
+
 # CORS
