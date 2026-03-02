@@ -1,0 +1,16 @@
+Tu cita ha sido confirmada.
+
+Hola {{ client_full_name }},
+
+Resumen de tu cita:
+- Servicio: {{ service_name }}
+- Profesional: {{ staff_full_name }}
+- Fecha: {{ appointment.date }}
+- Hora: {{ appointment.start_time }} - {{ appointment.end_time }}
+- Duración: {{ duration }}
+
+{% if appointment.additional_info %}
+Información adicional: {{ appointment.additional_info }}
+{% endif %}
+
+Gracias por confiar en nosotros.

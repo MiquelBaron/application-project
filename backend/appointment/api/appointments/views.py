@@ -16,6 +16,7 @@ from django.utils.dateparse import parse_date
 from django.utils.timezone import localdate, now
 
 from appointment.domain.appointments import services as appointment_services
+from appointment.notifications.email_service import enqueue_appointment_confirmation_email
 from appointment.notifications.tasks import send_appointment_notification
 
 
@@ -38,6 +39,7 @@ def list_appointments(request):
                 created_by=user,
             )
             send_appointment_notification(appointment, "appointment.created")
+            enqueue_appointment_confirmation_email(appointment)
             return JsonResponse({"success": True, "appointment_id": appointment.id})
 
         except ValueError as e:
