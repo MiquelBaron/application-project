@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+  <body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+    <h2>✅ Tu cita ha sido confirmada</h2>
+    <p>Hola {{ client_full_name }},</p>
+    <p>Tu cita fue registrada con éxito. Aquí tienes el resumen:</p>
+
+    <ul>
+      <li><strong>Servicio:</strong> {{ service_name }}</li>
+      <li><strong>Profesional:</strong> {{ staff_full_name }}</li>
+      <li><strong>Fecha:</strong> {{ appointment.date }}</li>
+      <li><strong>Hora:</strong> {{ appointment.start_time }} - {{ appointment.end_time }}</li>
+      <li><strong>Duración:</strong> {{ duration }}</li>
+    </ul>
+
+    {% if appointment.additional_info %}
+      <p><strong>Información adicional:</strong> {{ appointment.additional_info }}</p>
+    {% endif %}
+
+    <p>Gracias por confiar en nosotros.</p>
+  </body>
+</html>
