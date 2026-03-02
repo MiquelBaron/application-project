@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 export function useClients(csrfToken: string | null) {
-  const baseUrl = "http://localhost:8001/v1/api/clients/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/clients/";
 
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -127,18 +127,25 @@ export function useClients(csrfToken: string | null) {
   }
 
   const deleteClient = async(client_id:number) => {
-    const res = await fetch(`${baseUrl}${client_id}/`,{
-       method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        }
-    });
+  if (!csrfToken) throw new Error("CSRF token missing");
 
-    if(!res.ok){throw new Error("Error deleting client")}
-    await fetchClients();
+  const res = await fetch(`${baseUrl}${client_id}/`,{
+     method: "DELETE",
+     credentials: "include",
+     headers: {
+       "Content-Type": "application/json",
+       "X-CSRFToken": csrfToken,
+     }
+  });
 
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`Error deleting client: ${res.status} ${text}`);
   }
+
+  await fetchClients();
+}
+
 
   return {
     clients,

@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    environment:
+      ENV: development
+      DEBUG: "True"
+      DJANGO_SETTINGS_MODULE: appointments.settings.dev
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+
+    command: python manage.py runserver 0.0.0.0:8000
+
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+  
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:8000/v1/api
+    ports:
+    - "8080:8080"
+

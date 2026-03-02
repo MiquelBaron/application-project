@@ -3,6 +3,8 @@ import { useState } from "react";
 export function useReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const baseUrl = import.meta.env.VITE_API_URL; 
+
 
   /**
    * exportMedicalHistory
@@ -13,7 +15,7 @@ export function useReport() {
     setError(null);
 
     try {
-      const res = await fetch(`http://localhost:8001/v1/api/export-history/${patientId}/`, {
+      const res = await fetch(`${baseUrl}/export-history/${patientId}/`, {
         method: "GET",
         credentials: "include", // 🔹 envía cookies de sesión
       });

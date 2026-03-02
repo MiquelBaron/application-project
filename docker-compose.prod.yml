@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  
+  
+  backend:
+    build:
+      context: ./backend
+      target: production
+    container_name: backend
+    environment:
+      ENV: production
+      DJANGO_SETTINGS_MODULE: appointments.settings.prod
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    # Añade collectstatic al comando
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             gunicorn appointments.wsgi:application --bind 0.0.0.0:8000 --workers 3 --log-level debug"
+    volumes:
+      - ./backend/staticfiles:/app/appointments/staticfiles 
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+      - redis
+  
+  frontend:
+    build:
+      context: ./frontend
+      target: production  
+      args:
+        VITE_API_URL: /v1/api
+    container_name: frontend
+    ports:
+      - "80:80"
+    
+
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  pgdata:

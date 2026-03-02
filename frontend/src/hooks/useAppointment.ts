@@ -5,8 +5,7 @@ export function useAppointments() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const baseUrl = "http://localhost:8001/v1/api/appointments/";
-
+  const baseUrl = import.meta.env.VITE_API_URL +"/appointments/";
   // GET all appointments
   const fetchAppointments = useCallback(async () => {
     console.log("Called fetchAppointments");

@@ -6,7 +6,8 @@ export function useWorkingHours(csrfToken?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const baseUrl = "http://localhost:8001/v1/api/working_hours/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/workinghours/"; 
+
 
   const fetchWorkingHours = async (staff_id: number) => {
     if (!staff_id) return;

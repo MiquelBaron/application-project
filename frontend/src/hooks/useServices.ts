@@ -15,7 +15,7 @@ export function useServices(csrfToken?: string) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const baseUrl = "http://localhost:8001/v1/api/services/";
+  const baseUrl = import.meta.env.VITE_API_URL +"/services/"; 
 
   // Fetch all services
   const fetchServices = async () => {
@@ -49,7 +49,7 @@ export function useServices(csrfToken?: string) {
   // Create a new service
   const createService = async (data: Partial<Service>) => {
     try {
-      const res = await fetch(`${baseUrl}create/`, {
+      const res = await fetch(`${baseUrl}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -72,7 +72,7 @@ export function useServices(csrfToken?: string) {
   // Edit a service
   const editService = async (id: number, data: Partial<Service>) => {
     try {
-      const res = await fetch(`${baseUrl}${id}/edit/`, {
+      const res = await fetch(`${baseUrl}${id}/`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -95,7 +95,7 @@ export function useServices(csrfToken?: string) {
   // Delete a service
   const deleteService = async (id: number) => {
     try {
-      const res = await fetch(`${baseUrl}${id}/delete/`, {
+      const res = await fetch(`${baseUrl}${id}/`, {
         method: "DELETE",
         credentials: "include",
         headers: {

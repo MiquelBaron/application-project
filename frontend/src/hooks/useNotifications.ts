@@ -31,7 +31,7 @@ export const useNotifications = () => {
         const saved = localStorage.getItem('app-notifications');
         return saved ? JSON.parse(saved) : [];
     });
-
+    const baseUrl = import.meta.env.VITE_API_URL;
     const [isConnected, setIsConnected] = useState(false);
 
     // Guardar en localStorage cuando cambian
@@ -41,7 +41,7 @@ export const useNotifications = () => {
 
     useEffect(() => {
         console.log('🔗 Connecting SSE...');
-        const eventSource = new EventSource('http://localhost:8001/v1/api/stream/', {
+        const eventSource = new EventSource(`${baseUrl}/stream/`, {
             withCredentials: true
         });
 

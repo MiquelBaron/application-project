@@ -4,6 +4,7 @@ export function useStaffsByService(serviceId: number | null) {
   const [staffs, setStaffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const baseUrl = import.meta.env.VITE_API_URL; 
 
   useEffect(() => {
     if (!serviceId) {
@@ -14,7 +15,7 @@ export function useStaffsByService(serviceId: number | null) {
     setLoading(true);
     setError(null);
 
-    fetch(`http://localhost:8001/v1/api/staffs-by-service/${serviceId}/`, {
+    fetch(`${baseUrl}/staffs-by-service/${serviceId}/`, {
       headers: { "Accept": "application/json" },
       credentials: "include",
     })

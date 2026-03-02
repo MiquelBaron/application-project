@@ -8,7 +8,7 @@ export function useStaffs(csrfToken?: string) {
   const [staffs, setStaffs] = useState<Staff[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const baseUrl = "http://localhost:8001/v1/api/staffs/"
+  const baseUrl = import.meta.env.VITE_API_URL +"/staffs/"; 
   /* ------------------ FETCH STAFFS ------------------ */
   const fetchStaffs = useCallback(async () => {
     setIsLoading(true);
